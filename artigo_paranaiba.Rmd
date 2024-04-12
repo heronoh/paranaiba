@@ -108,7 +108,8 @@ editor_options:
 #  https://docs.google.com/spreadsheets/d/1w5m5VrRFAi-cocrx1MobRaZjQRgEdmVcjRqmF7RVi_c/edit#gid=2015531953
 
 FINAL_TBL_prnb <- readxl::read_xlsx(path = "~/prjcts/paranaiba/EM118_Paranaiba/results/ecomol-EM118_Paranaiba-complete_analysis_results-2023-01-16.xlsx",
-                                           col_names = TRUE,.name_repair = "minimal",
+                                           col_names = TRUE,
+                                    .name_repair = "minimal",
                                            guess_max = 200) %>% 
   dplyr::rename("BLASTn pseudo-score" = "Blast pseudo-score",
                 "Metadata 1" = "Metadata.1",
@@ -122,12 +123,22 @@ FINAL_TBL_prnb <- readxl::read_xlsx(path = "~/prjcts/paranaiba/EM118_Paranaiba/r
 colnames(FINAL_TBL_prnb)
 
 
-tbl_curadoria <- readxl::read_xlsx(path = "~/prjcts/paranaiba/data/Curadoria_seq_Parnaiba-mar24.xlsx",
-                                   col_names = TRUE,
-                                   sheet = "Curadoria",
-                                   guess_max = 200) %>% 
-  dplyr::rename("Curated ID" = "Sp. da bacia") %>% 
-  select(c("ASV header", "Curated ID"))
+tbl_curadoria <- read.csv(file = "~/prjcts/paranaiba/data/ecomol-EM118_Paranaiba-CURADO-ASVs_Vs_Samples_12abr24.csv",
+                          header = TRUE,
+                          sep = ",",
+                          check.names = F) %>% 
+  as_tibble() %>% 
+  filter(`ASV present in controls` %in% c("ASV exclusive to samples")) %>% 
+  dplyr::rename("Curated ID" = "ID CURADA") %>% 
+  select(c("ASV header", "Curated ID", "Observação"))
+
+#  Versão antiga da curadoria
+# tbl_curadoria <- readxl::read_xlsx(path = "~/prjcts/paranaiba/data/Curadoria_seq_Parnaiba-mar24.xlsx",
+#                                    col_names = TRUE,
+#                                    sheet = "Curadoria",
+#                                    guess_max = 200) %>% 
+#   dplyr::rename("Curated ID" = "Sp. da bacia") %>% 
+#   select(c("ASV header", "Curated ID"))
 
 colnames(tbl_curadoria)
 
@@ -140,6 +151,8 @@ colnames(tbl_curadoria)
 tbl_curadoria$`ASV header` 
 
 tbl_curadoria$`ASV header` %>% unique()
+tbl_curadoria$`ASV header` %>% duplicated() %>% which()
+tbl_curadoria$`ASV header`[tbl_curadoria$`ASV header` %>% duplicated() %>% which()]
 
 tbl_curadoria$`ASV header` %in% FINAL_TBL_prnb$`ASV header`
 
@@ -162,7 +175,8 @@ FINAL_TBL_prnb_cur <- FINAL_TBL_prnb %>%
   left_join(y = tbl_curadoria,by = "ASV header") %>% 
   # mutate("Curated ID" = case_when((`Curated ID` %in% c("",NA)) ~ (paste0(`Final ID (BLASTn)`,"--",round(`BLASTn pseudo-score`, digits = 2))),
   mutate("Curated ID" = case_when((`Curated ID` %in% c("",NA)) ~ (paste0(`Final ID (BLASTn)`,"-- Not Cur.")),
-                                  TRUE ~ `Curated ID`))
+                                  TRUE ~ `Curated ID`)) %>% 
+  filter(!`Observação` %in% c("Excluida"))
   
 
 
@@ -171,7 +185,7 @@ FINAL_TBL_prnb_cur <- FINAL_TBL_prnb %>%
 FINAL_TBL_prnb_cur %>% 
   filter(`Class (BLASTn)` %in% c("Actinopteri")) %>% 
   # filter(`Curated ID` %in% c("",NA)) %>%
-  select("ASV (Sequence)","ASV header","Curated ID","Final ID (BLASTn)","BLASTn pseudo-score") %>% 
+  select("ASV (Sequence)","ASV header","Curated ID","Final ID (BLASTn)","Observação","BLASTn pseudo-score") %>% 
   unique() %>%  View()
 
 
@@ -535,15 +549,16 @@ sum_uniq <- function(vec=vec){
 
 
 
-colnames(smp_abd_ID) %>% paste0(collapse = '",\n"') %>% cat()
+# colnames(smp_abd_ID) %>% paste0(collapse = '",\n"') %>% cat()
 
-
+options(scipen = 10)
 
 
 # generate ASVs Vs. Samples table from complete table ----
 
 smp_abd_ID_eco <-
 FINAL_TBL_prnb_cur_clean %>% 
+  mutate("Superkingdom (BLASTn)" = "Eukaryota") %>% 
   
   mutate(Identification = if_else(Identification %in% c(NA,"NA"),"NA",Identification)) %>%
   # mutate(Identification = `Curated ID`) %>%
@@ -585,6 +600,7 @@ FINAL_TBL_prnb_cur_clean %>%
                         # "Exact Genus/Species (DADA2)",
                 
                 
+             "Superkingdom (BLASTn)",
                 "Kingdom (BLASTn)",
                 "Phylum (BLASTn)",
                 "Subphylum (BLASTn)",
@@ -595,7 +611,9 @@ FINAL_TBL_prnb_cur_clean %>%
                 "Family (BLASTn)",
                 "Subfamily (BLASTn)",
                 "Genus (BLASTn)",
-                "max_tax","BLAST ID","BLASTn pseudo-score",
+                # "max_tax",
+      # "BLAST ID",
+      "BLASTn pseudo-score",
                           "1_subject header","1_subject","1_indentity","1_qcovhsp",
                           "1_length","1_mismatches","1_gaps","1_query start","1_query end",
                           "1_subject start","1_subject end","1_e-value","1_bitscore","2_subject header",
@@ -625,6 +643,7 @@ FINAL_TBL_prnb_cur_clean %>%
                         "Basin (DADA2)",
                         # "Exact Genus/Species (DADA2)",
              
+             "Superkingdom (BLASTn)",
               "Kingdom (BLASTn)",
              "Phylum (BLASTn)",
              "Subphylum (BLASTn)",
@@ -635,7 +654,8 @@ FINAL_TBL_prnb_cur_clean %>%
              "Family (BLASTn)",
              "Subfamily (BLASTn)",
              "Genus (BLASTn)",
-             "max_tax","BLAST ID",
+             # "max_tax",
+             # "BLAST ID",
       # "Identification",
       # "Identification Max. taxonomy",
              

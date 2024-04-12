@@ -109,7 +109,7 @@ metadata_tbl <- read.csv(file =  "/home/heron/prjcts/paranaiba/results/paranaiba
 
 options(ignore.negative.edge = TRUE)
 
-
+#set anotations position relative to tip
 tip_alignment <- FALSE
 
 
@@ -127,9 +127,9 @@ tip_alignment <- FALSE
     geom_tiplab(
     aes(label = `BLASTn pseudo-score`,
         fill = `BLASTn pseudo-score`),
-    offset = 0.04,
+    offset = 0.053,
     geom = "label",
-    # size = 3,
+    size = 2,
     linetype = "blank" ,
     align = FALSE) +
     scale_fill_gradientn(name = "BLASTn pseudo-score",
@@ -140,8 +140,7 @@ tip_alignment <- FALSE
     # `Curated ID`              #####################
     geom_tiplab(
       aes(label = `Curated ID`, col = `Curated ID`),
-      offset = 0.05,
-      # size = 3,
+      offset = 0.027,
       linetype = "blank" ,
       geom = "text",
       align = tip_alignment) +
@@ -152,7 +151,6 @@ tip_alignment <- FALSE
     geom_tiplab(
       aes(label = `Order (BLASTn)`, col = `Order (BLASTn)`),
       offset = 0.09,
-      # size = 3,
       linetype = "blank" ,
       geom = "text",
       align = tip_alignment) +
@@ -162,7 +160,6 @@ tip_alignment <- FALSE
     geom_tiplab(
       aes(label = `Family (BLASTn)`, col = `Family (BLASTn)`),
       offset = 0.12,
-      # size = 3,
       linetype = "blank" ,
       geom = "text",
       align = tip_alignment) +
@@ -181,7 +178,7 @@ tree_plot
                        collapse = ""),
          plot = tree_plot,
          device = "pdf",
-         width = 140,
+         width = 150,
          height = 120,
          limitsize = FALSE,
          units = "cm",
