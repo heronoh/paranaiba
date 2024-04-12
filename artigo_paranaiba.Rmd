@@ -661,6 +661,14 @@ smp_abd_ID_eco %>%
                     col_names = TRUE,format_headers = TRUE)
 
 
+# save as .csv ----
+smp_abd_ID_eco %>% 
+  write.csv(file = paste0(results_path,"/",prjct_rad,"-todas_infos_ASVs-",Sys.Date(),".csv"),
+            sep = ";",
+            col.names = TRUE,
+            row.names = FALSE)
+
+
 
 colnames(smp_abd_ID_eco) %>% paste0(collapse = '",\n"') %>% cat()
 

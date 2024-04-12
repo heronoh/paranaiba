@@ -42,18 +42,20 @@ ASVs_seqs_ori <- DECIPHER::OrientNucleotides(myXStringSet = ASVs_seqs) %>%
 
 # ASVs_seqs_aligniple sequence alignment ----
 ASVs_seqs_align <- msa::msa(inputSeqs = ASVs_seqs_ori,
-                       method="ClustalW",
+                       method = "ClustalW",
                        substitutionMatrix = "clustalw",
-                       type="dna",
-                       order ="input")
+                       type = "dna",
+                       order = "input")
 
 
 # calculate distance matrix ----
 #convert object to phy
-ASVs_seqs_align_phy <- as.phyDat(ASVs_seqs_align, type="DNA", names=names(ASVs_seqs_ori))
+ASVs_seqs_align_phy <- as.phyDat(ASVs_seqs_align,
+                                 type = "DNA",
+                                 names = names(ASVs_seqs_ori))
 #calculate dist
 ASVs_seqs_dist <- dist.ml(x = ASVs_seqs_align_phy,
-                          model ="JC69")
+                          model = "JC69")
 
 # built tree ----
 ASVs_tree <- phangorn::NJ(x = ASVs_seqs_dist) # Note, tip order != sequence order
@@ -65,7 +67,7 @@ tips_labels <- c(as.character(ASVs_seqs_align))
 
 add.tips(tree = ASVs_tree, tips = tips_labels,where = 10, edge.length = NULL)
 
-fit = pml(ASVs_tree, data=ASVs_seqs_align_phy)
+fit = pml(ASVs_tree, data = ASVs_seqs_align_phy)
 
 ## negative edges length changed to 0!
 
@@ -105,85 +107,89 @@ metadata_tbl <- read.csv(file =  "/home/heron/prjcts/paranaiba/results/paranaiba
 
 # plot tree ----
 
-options(ignore.negative.edge=TRUE)
+options(ignore.negative.edge = TRUE)
+
+
+tip_alignment <- FALSE
+
+
 
   tree_plot <- ggtree(tr = ASVs_tree,
                     branch.length = 3,
                     ladderize = T)  %<+%
     tips_metadata +                           #adicionar metadados
-  geom_tiplab(align=T,
-              linesize=0.5)  +
+  geom_tiplab(align = tip_alignment,
+              linesize = 0.5)  +
   geom_treescale(width = 0.4)  +
   theme_tree2() +
 
-    # BLASTn pseudo-score
+    # BLASTn pseudo-score      #####################
     geom_tiplab(
     aes(label = `BLASTn pseudo-score`,
         fill = `BLASTn pseudo-score`),
-    # offset = 0.04,
+    offset = 0.04,
     geom = "label",
     # size = 3,
     linetype = "blank" ,
-    align = TRUE) +
+    align = FALSE) +
     scale_fill_gradientn(name = "BLASTn pseudo-score",
                          colours = c("white","red","yellow","green","dark green"),
                          values = c(0.6,1),
-                         na.value ="white") +
+                         na.value = "white") +
 
-    # `Curated ID`
+    # `Curated ID`              #####################
     geom_tiplab(
       aes(label = `Curated ID`, col = `Curated ID`),
-      # offset = 0.05,
+      offset = 0.05,
       # size = 3,
       linetype = "blank" ,
       geom = "text",
-      align = TRUE) +
-    scale_color_manual(values = viridis::turbo(n=10)) +
+      align = tip_alignment) +
+    scale_color_manual(values = viridis::turbo(n = 10)) +
 
 
-    # Order
+    # Order      #####################
     geom_tiplab(
       aes(label = `Order (BLASTn)`, col = `Order (BLASTn)`),
-      # offset = 0.09,
+      offset = 0.09,
       # size = 3,
       linetype = "blank" ,
       geom = "text",
-      align = TRUE) +
-    scale_color_manual(values = viridis::turbo(n=10)) +
+      align = tip_alignment) +
+    scale_color_manual(values = viridis::turbo(n = 10)) +
 
-    # Family
+    # Family      #####################
     geom_tiplab(
       aes(label = `Family (BLASTn)`, col = `Family (BLASTn)`),
-      # offset = 0.12,
+      offset = 0.12,
       # size = 3,
       linetype = "blank" ,
       geom = "text",
-      align = TRUE) +
-    scale_color_manual(values = viridis::turbo(n=105)) +
-    guides(col="none")
+      align = tip_alignment) +
+    scale_color_manual(values = viridis::turbo(n = 105)) +
+    guides(col = "none")
 
 
 
 tree_plot
 
-  # ggsave(file = paste0(figs_path,"/",project_name,"-ASVs_tree.pdf",collapse = ""),
-  ggsave(file = paste0("/home/heron/prjcts/paranaiba/results/figs","/",project_name,"-ASVs_tree.pdf",collapse = ""),
-         # ggsave(file = paste0(results_path,"/",
-         #                      unique(smp_abd_ID_Final$Project),"/",
-         #                      unique(smp_abd_ID_Final$Project),"-ASV_length_by_sample-ALL-ASVs.pdf",collapse = ""),
+
+# sava tree plot ----
+
+  # ggsave(file = paste0("/home/heron/prjcts/paranaiba/results/figs","/",project_name,"-ASVs_tree.pdf",collapse = ""),
+  ggsave(file = paste0("/home/heron/prjcts/paranaiba/results/figs/Paranaiba-ASVs_tree.pdf",
+                       collapse = ""),
          plot = tree_plot,
          device = "pdf",
          width = 140,
          height = 120,
-         limitsize=FALSE,
+         limitsize = FALSE,
          units = "cm",
          dpi = 300)
 
 
 
-
-
-  #referencias ----
+# referencias ----
   #https://yulab-smu.top/treedata-book/chapter7.html
   #https://www.youtube.com/watch?v=3swFCSt2_x4
   #https://f1000research.com/articles/5-1492/v1
