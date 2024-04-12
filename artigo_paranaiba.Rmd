@@ -103,6 +103,10 @@ editor_options:
 ```{r, eval=FALSE,echo=TRUE}
 
 #tabela final de resultados ----
+
+#tabela retidara de:
+#  https://docs.google.com/spreadsheets/d/1w5m5VrRFAi-cocrx1MobRaZjQRgEdmVcjRqmF7RVi_c/edit#gid=2015531953
+
 FINAL_TBL_prnb <- readxl::read_xlsx(path = "~/prjcts/paranaiba/EM118_Paranaiba/results/ecomol-EM118_Paranaiba-complete_analysis_results-2023-01-16.xlsx",
                                            col_names = TRUE,.name_repair = "minimal",
                                            guess_max = 200) %>% 
@@ -218,7 +222,7 @@ FINAL_TBL_prnb_cur_clean <- FINAL_TBL_prnb_cur %>%
     mutate("Total clean sample abd."  = 0,
            "Total clean sample abd." = case_when((`ID status` %in% c("IDed") & 
                                                         `Primer expected length` %in% c("in range") & 
-                                                        # `Possible contamination` %in% c("True detection") &
+                                                        `Possible contamination` %in% c("True detection") &
                                                         `Possible Metazoa` == TRUE) ~ sum(`ASV absolute abundance`)
                                                       # (`ID status` %in% "not IDed") ~ 0,
                                                       # (`Expected length` %in% "out of range") ~ 0,
@@ -673,7 +677,16 @@ colnames(smp_abd_ID_eco) %>% paste0(collapse = '",\n"') %>% cat()
 smp_abd_ID_eco %>% colnames()%>% paste0(collapse = '",\n"') %>% cat()
 
 sum_uniq(vec = smp_abd_ID$`ASV (Sequence)`)
-# 
+#
+
+
+FINAL_TBL_prnb_cur_clean %>% 
+  filter(`Curated ID` %in% c("Pimelodus maculatus")) %>% 
+  pull(`ASV absolute abundance`) %>% 
+  sum()
+
+
+
 smp_abd_ID_eco_ID <-
   FINAL_TBL_prnb_cur_clean %>%
   # filter(`Read origin` %in% c("R1","R2")) %>%
@@ -684,10 +697,16 @@ smp_abd_ID_eco_ID <-
   filter(`Class (BLASTn)` %in% c("Actinopteri")) %>%
   # filter((`Possible contamination` %in% c("True detection") & Type %in% c("Sample") ) |Type %in% c("PCR control") ) %>%
   
+  mutate("Superkingdom (BLASTn)" = "Eukaryota") %>% 
+  
+  #percentualize abds
+  mutate("ASV % abundance on sample" = `Clean relative abd. on sample`*100) %>% 
+  
   group_by(`Curated ID`) %>% 
   mutate("Min. BLASTn pseudo-score" = min(`BLASTn pseudo-score`),
          "Max. BLASTn pseudo-score" = max(`BLASTn pseudo-score`),
          "Num. ASVs in this ID" = length(unique(`ASV (Sequence)`)),
+         "ID total abd. on all samples" = sum(`ASV absolute abundance`),
          "ASVs in this ID" = paste0(unique(`ASV header`),collapse = ", "),
          "Num. OTUs in this ID" = length(unique(`OTU`)),
          "OTUs in this ID" = paste0(unique(`OTU`),collapse = ", ")) %>% 
@@ -752,7 +771,8 @@ smp_abd_ID_eco_ID <-
       "Max. BLASTn pseudo-score",
                 
                 "Possible Metazoa",
-              "Kingdom (BLASTn)",
+             "Superkingdom (BLASTn)",
+             "Kingdom (BLASTn)",
              "Phylum (BLASTn)",
              "Subphylum (BLASTn)",
              "Class (BLASTn)",
@@ -763,13 +783,15 @@ smp_abd_ID_eco_ID <-
              "Subfamily (BLASTn)",
              "Genus (BLASTn)",
                 # "BLAST ID","max_tax"
+      "ID total abd. on all samples",
       "Num. ASVs in this ID",
       "ASVs in this ID",
       "Num. OTUs in this ID",
       "OTUs in this ID" 
       ),
     # values_from = c("Relative abundance on sample"),
-    values_from = c("Clean relative abd. on sample"),
+    values_from = c("ASV % abundance on sample"),
+    # values_from = c("Clean relative abd. on sample"),
     values_fn = sum_uniq,
     names_from = "Unique_File_name",
     names_prefix = "SAMPLE ",
@@ -789,6 +811,7 @@ smp_abd_ID_eco_ID <-
                         # "Basin (DADA2)",
                         # "Exact Genus/Species (DADA2)",
              
+             "Superkingdom (BLASTn)",
               "Kingdom (BLASTn)",
              "Phylum (BLASTn)",
              "Subphylum (BLASTn)",
@@ -811,9 +834,13 @@ smp_abd_ID_eco_ID <-
       "ASVs in this ID",
       "Num. OTUs in this ID",
       "OTUs in this ID",
-             starts_with("SAMPLE ")
+             starts_with("SAMPLE "),
+      "ID total abd. on all samples",
              )) %>%  
-  mutate_if(is.numeric , replace_na, replace = 0)
+  mutate_if(is.numeric , replace_na, replace = 0) %>% 
+  mutate("Total abd. of all IDs" =  sum(`ID total abd. on all samples`),
+         "Cur. ID % abd. on all samples" = round(`ID total abd. on all samples`/`Total abd. of all IDs`*100,
+                                                    digits = 3))
 
 
 smp_abd_ID_eco_ID %>% 
