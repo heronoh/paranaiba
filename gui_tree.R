@@ -3,7 +3,7 @@
   library(DECIPHER)
   library(dada2)
   library(dplyr)
-  # library(phyloseq)
+  library(phytools)
   library(ggplot2)
   library(gridExtra)
   library(ggtree)
@@ -48,32 +48,83 @@ ASVs_seqs_align <- msa::msa(inputSeqs = ASVs_seqs_ori,
                        order = "input")
 
 
-# calculate distance matrix ----
+
+# MaximumLlikelyhood tree ----
+
+# https://klausvigo.github.io/phangorn/articles/MLbyHand.html
+
+library(ape)
+library(phangorn)
+# fdir <- system.file("extdata/trees", package = "phangorn")
+# primates <- read.phyDat(file.path(fdir, "primates.dna"),
+#                         format = "interleaved")
+
 #convert object to phy
-ASVs_seqs_align_phy <- as.phyDat(ASVs_seqs_align,
+# ASVs_seqs_align_phy
+primates <- as.phyDat(ASVs_seqs_align,
                                  type = "DNA",
-                                 names = names(ASVs_seqs_ori))
-#calculate dist
-ASVs_seqs_dist <- dist.ml(x = ASVs_seqs_align_phy,
-                          model = "JC69")
-
-# built tree ----
-ASVs_tree <- phangorn::NJ(x = ASVs_seqs_dist) # Note, tip order != sequence order
-ASVs_tree
+                                 names = names(ASVs_seqs_align))
 
 
-#sequence, names and tips ----
-tips_labels <- c(as.character(ASVs_seqs_align))
 
-add.tips(tree = ASVs_tree, tips = tips_labels,where = 10, edge.length = NULL)
+dm <- dist.ml(primates)
+treeNJ  <- NJ(dm)
+fit <- pml(treeNJ, data=primates)
+fit
+methods(class="pml")
+fitJC  <- optim.pml(fit, rearrangement="NNI")
+logLik(fitJC)
+fitF81 <- update(fitJC, k=4, inv=0.2, bf=baseFreq(primates))
+fitF81
+fitGTR <- optim.pml(fitF81, model="GTR", optInv=TRUE, optGamma=TRUE,
+                    rearrangement = "NNI", control = pml.control(trace = 0))
+fitGTR
 
-fit = pml(ASVs_tree, data = ASVs_seqs_align_phy)
+fitGTR <- optim.pml(fitGTR, model="GTR", optInv=TRUE, optGamma=TRUE,
+                    rearrangement = "stochastic", control = pml.control(trace = 0))
+fitGTR
 
-## negative edges length changed to 0!
+anova(fitJC, fitGTR)
 
-# fitGTR <- update(fit, k=4, inv=0.2)
-# fitGTR <- optim.pml(fitGTR, model="GTR", optInv=TRUE, optGamma=TRUE,
-                    # rearrangement = "stochastic", control = pml.control(trace = 0))
+SH.test(fitGTR, fitJC)
+AIC(fitJC)
+AIC(fitGTR)
+
+bs <- bootstrap.pml(fitJC, bs=100, optNni=TRUE,
+                    control = pml.control(trace = 0))
+
+plotBS(midpoint(fitJC$tree), bs, p = 50, type="p")
+
+cnet <- consensusNet(bs, p=0.2)
+plot(cnet, show.edge.label=TRUE)
+
+
+ASVs_tree <-  fitJC$tree
+
+
+                  # calculate distance matrix ----
+
+                  #calculate dist
+                  ASVs_seqs_dist <- dist.ml(x = ASVs_seqs_align_phy,
+                                            model = "JC69")
+
+                  # built tree ----
+                  ASVs_tree <- phangorn::NJ(x = ASVs_seqs_dist) # Note, tip order != sequence order
+                  ASVs_tree
+
+
+                  #sequence, names and tips ----
+                  tips_labels <- c(as.character(ASVs_seqs_align))
+
+                  add.tips(tree = ASVs_tree, tips = tips_labels,where = 10, edge.length = NULL)
+
+                  fit = pml(ASVs_tree, data = ASVs_seqs_align_phy)
+
+                  ## negative edges length changed to 0!
+
+                  # fitGTR <- update(fit, k=4, inv=0.2)
+                  # fitGTR <- optim.pml(fitGTR, model="GTR", optInv=TRUE, optGamma=TRUE,
+                                      # rearrangement = "stochastic", control = pml.control(trace = 0))
 
 
 # write/read tree ----
@@ -101,8 +152,47 @@ metadata_tbl <- read.csv(file =  "/home/heron/prjcts/paranaiba/results/paranaiba
 # rownames(tips_metadata) <- tips_metadata$node
 
 
+  ASVs_tree$edge
+  ASVs_tree$edge.length
+  ASVs_tree$tip.label
+  ASVs_tree$Nnode
 
 
+# rotate nodes to match taxa? ----
+  # http://blog.phytools.org/2015/04/finding-closest-set-of-node-rotations.html
+
+  #nao funcionou
+  # tree<-pbtree(n=26,tip.label=LETTERS)
+  # plotTree(tree)
+
+
+  ## random set of 100 rotations
+z
+  ## tree all scrambled up
+  ## the objective function going to zero indicated fully
+## unscrambled
+
+  # plotTree(tree)
+
+  # ## the objective function going to zero indicated fully
+  # ## unscrambled
+  # x<-setNames(1:Ntip(tree),LETTERS)
+  # unscrambled<-minRotate(tree,x)
+  #
+  #
+  #
+  #
+  #
+  #
+  # ordered_tip_names <- tips_metadata %>%
+  #   arrange(`Order (BLASTn)`,`Family (BLASTn)`) %>%
+  #   pull(tip_label)
+  #
+  # tip_order <- setNames(1:Ntip(ASVs_tree),ordered_tip_names)
+  #
+  #
+  # ASVs_tree <- phytools::minRotate(tree = ASVs_tree,
+  #                                  x = tip_order )
 
 
 # plot tree ----
