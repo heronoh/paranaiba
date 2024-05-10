@@ -158,7 +158,7 @@ tbl_curadoria$`ASV header` %in% FINAL_TBL_prnb$`ASV header`
 
 
 
-FINAL_TBL_prnb$`Curated ID`
+FINAL_TBL_prnb
 
 
 FINAL_TBL_prnb %>% 
@@ -285,232 +285,61 @@ FINAL_TBL_prnb_cur_clean %>%
 
 ```
 
-## IDs heatmap
+
+
+
+## Reload curated table
 
 ```{r, eval=FALSE,echo=TRUE}
+# the curation was performed on the IDs_X_Samples tab!!!!
 
 
-curated_smp_abd_ID <- FINAL_TBL_prnb_cur_clean
-
-
-scales::show_col(viridis::turbo(n=10))
-
-options(scipen = 500,digits = 4)
-
-library(ggh4x)
-
-
-#factor metadata
-curated_smp_abd_ID %>% dplyr::select(starts_with("Metada")) %>% unique()
-
-curated_smp_abd_ID$`Metadata 1` %>% unique() 
-curated_smp_abd_ID$`Metadata 6` %>% unique() 
-curated_smp_abd_ID$`Metadata 7` %>% unique() 
+cur_Daniel <- readxl::read_xlsx(path = "~/prjcts/paranaiba/data/Paranaiba-Complete_analysis_results-2024-04-12_tabela_paper.xlsx",
+                                              sheet = "IDs X Samples",
+                                           col_names = TRUE,
+                                    .name_repair = "minimal",
+                                           guess_max = 200) 
 
 
 
 
-
-
-# for (project in all_projects) {
-for (project in c("Paranaíba")) {
-
-project <- "Paranaíba"
-
-project_name <- project %>% str_replace_all(pattern = " ",
-                                        replacement = "_")
-  
-N_samples <-   curated_smp_abd_ID %>%
-  filter(str_detect(string = Project, pattern = project)) %>% 
-  pull(Unique_File_name) %>% unique() %>% length()
-
-
-N_IDs <- curated_smp_abd_ID %>%
-  filter(str_detect(string = Project, pattern = project)) %>% 
-  pull(`Final ID (BLASTn)`) %>% unique() %>% length()
-
-
-
-IDs_smpls_heat <- 
-curated_smp_abd_ID %>% 
-  filter(str_detect(string = Project, pattern = project)) %>%
-  # unite(col = "Sample", Sample, Primer,sep = "-",remove = F) %>%
-  # # filter(if_else(Primer %in% c("VF2_FR1d;Fish1;Fish2"),
-  # #                `Read origin` %in% c("R1","R2"),
-  # #                `Read origin` %in% c("merged"))) %>% 
-  # mutate(`Read origin` = case_when(`Read origin` %in% c("merged") ~ "",
-  #                                  TRUE ~ `Read origin`)) %>% 
-  # arrange(`Sample name`) %>% 
-  arrange(Unique_File_name) %>% 
-  # mutate("Unique_File_name" = factor(Unique_File_name, levels = sample_levels)) %>%
-  filter(Type %in% c("Sample")) %>%
-  filter(`Clean relative abd. on sample` >= 0.0005) %>%
-  filter(`Primer expected length` %in% c("in range")) %>%
-  filter(`BLASTn pseudo-score` >= 80) %>%
-  filter(`Kingdom (BLASTn)` %in% c("Metazoa")) %>%
-  # filter(`Class (BLASTn)` %in% c("Actinopteri")) %>%
-  # filter((`Contamination status` %in% c("True detection") & Type %in% c("Sample") ) |Type %in% c("PCR control") ) %>%
-  # filter((`Contamination status` %in% c("True detection") )) %>%
-                    # filter((!str_detect( string = `Final ID (BLASTn)`,pattern = c("environmental") ))) %>%
-  group_by(`Curated ID`,Unique_File_name,`Read origin`) %>%
-  # group_by(`Final ID (BLASTn)`,Sample) %>%
-  # group_by(`Genus (BLASTn)`,Sample) %>%
-  # group_by(Identification,Unique_File_name,`Read origin`) %>%
-  # group_by(`Final ID (DADA2)`,Unique_File_name,`Read origin`,`ASV (Sequence)`) %>%
-  # group_by(`Final ID (BLASTn)`,sample_Sample,`Read origin`,`ASV (Sequence)`) %>%
-  # group_by(`Final ID (BLASTn)`,Unique_File_name,`Read origin`,`ASV (Sequence)`) %>%
-  # mutate("Relative abundance on sample sum (%)" = round(sum(`Relative abundance on sample`),digits = 3),
-  mutate("Relative abundance on sample sum (%)" = round(sum(`Clean relative abd. on sample`)*100,digits = 3),
-         "Num ASVs per ID" = length(unique(`ASV (Sequence)`))) %>% 
-  ungroup() %>% 
-  group_by(`Curated ID`,`Read origin`) %>%
-  # group_by(`Genus (BLASTn)`) %>% 
-  mutate("Min BLASTn pseudo-score" = round(min(`BLASTn pseudo-score`),digits = 2)
-         ) %>%
-  ungroup() %>% 
-  select(c("Min BLASTn pseudo-score","Unique_File_name", "Curated ID", "Metadata 1","Metadata 2", "Relative abundance on sample sum (%)", "Family (BLASTn)", "Order (BLASTn)", "Class (BLASTn)")) %>% 
-  unique() %>% 
-  # filter(`Relative abundance on sample sum (%)` > 0.05) %>%
-  # unite(col = ID_score,sep = "   ", `Curated ID`,
-  #       `Min. BLASTn pseudo-score`) %>% 
-  ggplot(aes( 
-    # x = interaction(`Sample name`, Unique_File_name, sep = " - "),
-    x = interaction(Unique_File_name, `Metadata 1`, sep = " - "),
-    # x = interaction(`Read origin`,Unique_File_name,sep = " "),
-    # x = interaction(`Read origin`,Sample,sep = " "),
-    # x = `Sample name`,
-    # x = str_remove(Sample,pattern = "-MiFish|-MiBird"),
-  # ggplot(aes(x=`Metadata 1`,
-             # y=`Curated ID`,
-             # y=Identification,
-             y = interaction(`Curated ID`,`Min BLASTn pseudo-score`,sep = " / ",lex.order = T),
-             # y = interaction(`Genus (BLASTn)`,`Min BLASTn pseudo-score`,sep = " / "),
-             # y=interaction(`Final ID (DADA2)`,`Final ID (BLASTn)`,sep = " / "),
-             # y=`ID_score`,
-             fill =`Relative abundance on sample sum (%)`,
-             # col=`Possible contamination`,
-                                                 # group=`ASV (Sequence)`,
-             # group=`Genus (BLASTn)`
-             group=`Curated ID`
-             # linetype = `Possible contamination`,
-             # label = `Num ASVs per ID`
-             )) +
-  geom_tile(size=0.25,
-            height = 0.75,
-            width = 0.75) +
-  geom_text(aes(label = round(`Relative abundance on sample sum (%)`,digits = 1),
-                col = `Relative abundance on sample sum (%)`/ 10),
-            size = 1.5
-            
-             # ,fill="white", label.size = 0.01, col = "Black",show.legend = TRUE
-             ) +
-  # stat_contour(aes(z=`Possible contamination`),
-  #              color = c("#ff000d",NA)) +
-  # scale_fill_gradientn(name = "Relative abd.\n on sample (%)",
-  scale_fill_gradientn(name = "Abundância relativa\nna amostra (%)",
-                       # colours = c("white","dark red","red", "yellow","green","dark green","blue"),
-                       colours = c("white", "yellow","green","dark green","blue"),
-                       # colours = viridis::viridis(n = 10,direction = -1),
-                       values = c(0,1),
-                       breaks = c(0.001,0.01, 0.05, 0.25,1,2.5,5,10,25,50,100),
-                       na.value ="white",
-                       trans="log10")+
-  scale_colour_gradientn(name = "Abundância relativa\nna amostra (%)",
-                       # colours = c("white","dark red","red", "yellow","green","dark green","blue"),
-                       colours = rev(c("white", "yellow","green","dark green","blue")),
-                       # colours = viridis::viridis(n = 10,direction = -1),
-                       values = c(0,1),
-                       breaks = c(0.001,0.01, 0.05, 0.25,1,2.5,5,10,25,50,100),
-                       na.value ="white",
-                       trans="log10") +
-  # scale_colour_manual(values = c("#d91133",NA)) +
-  scale_linetype_manual(values=c("solid",NA)) +
-  # guides(color = guide_legend(override.aes = list(fill = "white", 
-  #                                                 size = 10))) +
-  theme_grey(base_line_size = 0.025,base_size = 8) +
-  # theme(axis.text.x = element_text(angle = 0,hjust = 1)) +
-  xlab("Pontos de coleta") +
-  # ylab("Espécies") +
-  ylab("BLASTn Identification / Minimum BLASTn pseudo-score") +
-  # ylab("Identificação DADA2 / Identificação BLASTn") +
-    # scale_y_discrete(limits=rev) +
-  ggtitle(label = paste0("LGC - ",project, " - ",Sys.Date()),
-          # ggtitle(label = paste0("ECOMOL - ",project, " - ",Sys.Date()),
-              # subtitle = "Espécies identificados nas amostras\n             (com BLASTn pseudo-score >= 98% e ASVs de tamanho entre 221 e 256 - apenas cordados)") +                                                                # Change font size
-              # subtitle = "Número de ASVs por espécie: Identificações por BLASTn com >= 98% de similaridade") +      
-              # subtitle = "Número de ASVs por espécie: Identificações por BLASTn com >= 90% de similaridade & RRA limpo > 0.5%") +      
-              # subtitle = "Abundância relativa de cada identificação obtida por BLASTn, sem cortes de abundância") +      
-              # subtitle = "Abundância relativa de cada identificação obtida por BLASTn, considerando apenas IDs com BLASTn pseudo-score >= 80% e Abundância relativa >= 0.5%") +      
-              subtitle = "Abundância relativa de cada identificação obtida por BLASTn\nIDs com BLASTn pseudo-score >= 80% e RRA >= 0.05%") +      
-  # \n ASVs detectadas nos controles negativos já removidas das amostras.
-    # facet_grid(rows = vars(`Class (BLASTn)`,`Order (BLASTn)`),
-    # facet_grid(rows = vars(`Phylum (BLASTn)`,`Class (BLASTn)`,`Order (BLASTn)`), 
-    facet_grid(rows = vars(`Class (BLASTn)`,`Order (BLASTn)`,`Family (BLASTn)`),
-    # facet_grid(rows = vars(`Class (DADA2)`,`Order (DADA2)`,`Family (DADA2)`),
-    # facet_grid(rows = vars(`Order (BLASTn)`,`Family (BLASTn)`),
-               # cols = vars(Primer),
-               # cols = vars(Researcher,Project),
-               cols = vars(`Metadata 1`),
-               # cols = vars(`Metadata 9`,`Metadata 11`,`Metadata 6`,`Metadata 7`),
-               # cols = vars(Project,metadata_1),
-               # cols = vars(Local,Tratamento),
-                                # labeller = labeller(`Metadata 3` = supp.labs),
-    # facet_grid(rows = vars(`Possible contamination`,`Read origin`),
-               # cols = vars(Origin),
-               scale = 'free',space = 'free',
-    labeller = label_wrap_gen(width=12)) +
-  
-  
-  # Change font size
-              # subtitle = "Espécies identificados nas amostras\n             (com BLASTn pseudo-score >= 98% & RRA >= 0.05) - apenas peixes.") +                                                                # Change font size
-  theme(legend.position = "bottom",
-        strip.text.y = element_text(size = 10,angle = 0),
-        strip.text.x = element_text(size = 10),
-        plot.title = element_text(size=12),
-        plot.subtitle = element_text(size=10),
-        axis.text.y = element_text(size=8),
-        axis.title.x =element_text(size=14), 
-        axis.title.y =element_text(size=14), 
-        axis.text.x = element_text(size=8,angle = 45, hjust = 1),
-        legend.text= element_text(size=8),
-        legend.title = element_text(size=10),
-        legend.key.width = unit(4, 'cm'),
-        legend.key.height = unit(0.5, 'cm'),
-        panel.border = element_rect(colour = "#000000", fill = NA),
-        panel.grid = element_line(colour = "#ffffff",linewidth = 0.01)
-        )  +
-  geom_vline(xintercept = c(seq(0.5,220.5,1)), linewidth = 0.1) +
-  guides(colour="none")
-# facet_wrap2(facets = `Phylum (BLASTn)`~ Metadata 1)
-
-# IDs_smpls_heat
-# pg <- ggplotGrob(IDs_smpls_heat)
-# 
-# 
-# 
-# for(i in which(grepl("strip-r", pg$layout$name))){
-#   pg$grobs[[i]]$layout$clip <- "off"
-# }
-# grid::grid.draw(pg)
-
-
-
-ggsave(file = paste0(figs_path,"/",
-                     project_name,"-","heatmap","-Sps_BLASTn_abd-CURATED.pdf"),
-                     # unique(smp_abd_ID_Final$Project),"/",
-                     # unique(smp_abd_ID_Final$Project),"-heatmap","-Sps_BLASTn.pdf",collapse = ""),
-     plot = IDs_smpls_heat,
-     device = "pdf",
-     width = ifelse(N_samples <= 10, 15, (N_samples)+16),
-     height = ifelse(N_IDs <= 20, 10, N_IDs/4+10),
-     units = "cm",
-     limitsize = FALSE,
-     dpi = 300)
-
-}
+ cur_Daniel <- cur_Daniel %>% 
+ select(c(`Curated ID`,`ASVs in this ID`)) %>% 
+   separate_longer_delim(cols = "ASVs in this ID",
+                         delim = ",") %>% 
+   mutate(`ASVs in this ID` = str_remove_all(`ASVs in this ID`, pattern = " ")) %>% 
+   dplyr::rename("ASV header" = "ASVs in this ID") %>% 
+   na.exclude()
+ 
+ 
+ cur_Daniel$`ASV header` %>% duplicated()
 
 
 ```
+
+
+
+
+
+
+### Reintegrate ID curation
+
+```{r,echo=TRUE, eval=FALSE}
+FINAL_TBL_prnb_cur_clean$`Curated ID` %>% unique()
+
+
+FINAL_TBL_prnb_cur_clean <- FINAL_TBL_prnb_cur_clean %>%
+  select(-c("Curated ID")) %>% 
+  left_join(y = cur_Daniel,
+            by = "ASV header")
+
+
+FINAL_TBL_prnb_cur_clean$`Curated ID` %>% unique()
+
+```
+
+
+
 
 
 
@@ -518,7 +347,7 @@ ggsave(file = paste0(figs_path,"/",
 
 ```{r,echo=TRUE, eval=FALSE}
 
-FINAL_TBL_prnb_cur_clean%>% 
+FINAL_TBL_prnb_cur_clean %>% 
 writexl::write_xlsx(
                     path = paste0(results_path,"/",project_name,"-Complete_analysis_results-",Sys.Date(),".xlsx"),
                     col_names = TRUE,
@@ -818,8 +647,8 @@ smp_abd_ID_eco_ID <-
       "OTUs in this ID" 
       ),
     # values_from = c("Relative abundance on sample"),
-    values_from = c("ASV % abundance on sample"),
-    # values_from = c("Clean relative abd. on sample"),
+    # values_from = c("ASV % abundance on sample"),
+    values_from = c("Clean relative abd. on sample"),
     values_fn = sum_uniq,
     names_from = "Unique_File_name",
     names_prefix = "SAMPLE ",
@@ -881,6 +710,234 @@ writexl::write_xlsx(
 ```
 
 
+
+
+## IDs heatmap
+
+```{r, eval=FALSE,echo=TRUE}
+
+
+curated_smp_abd_ID <- FINAL_TBL_prnb_cur_clean
+
+
+scales::show_col(viridis::turbo(n=10))
+
+options(scipen = 500,digits = 4)
+
+library(ggh4x)
+
+
+#factor metadata
+curated_smp_abd_ID %>% dplyr::select(starts_with("Metada")) %>% unique()
+
+curated_smp_abd_ID$`Metadata 1` %>% unique() 
+curated_smp_abd_ID$`Metadata 6` %>% unique() 
+curated_smp_abd_ID$`Metadata 7` %>% unique() 
+
+
+
+
+
+
+# for (project in all_projects) {
+for (project in c("Paranaíba")) {
+
+project <- "Paranaíba"
+
+project_name <- project %>% str_replace_all(pattern = " ",
+                                        replacement = "_")
+  
+N_samples <-   curated_smp_abd_ID %>%
+  filter(str_detect(string = Project, pattern = project)) %>% 
+  pull(Unique_File_name) %>% unique() %>% length()
+
+
+N_IDs <- curated_smp_abd_ID %>%
+  filter(str_detect(string = Project, pattern = project)) %>% 
+  pull(`Final ID (BLASTn)`) %>% unique() %>% length()
+
+
+
+IDs_smpls_heat <- 
+curated_smp_abd_ID %>% 
+  filter(str_detect(string = Project, pattern = project)) %>%
+  # unite(col = "Sample", Sample, Primer,sep = "-",remove = F) %>%
+  # # filter(if_else(Primer %in% c("VF2_FR1d;Fish1;Fish2"),
+  # #                `Read origin` %in% c("R1","R2"),
+  # #                `Read origin` %in% c("merged"))) %>% 
+  # mutate(`Read origin` = case_when(`Read origin` %in% c("merged") ~ "",
+  #                                  TRUE ~ `Read origin`)) %>% 
+  # arrange(`Sample name`) %>% 
+  arrange(Unique_File_name) %>% 
+  # mutate("Unique_File_name" = factor(Unique_File_name, levels = sample_levels)) %>%
+  filter(Type %in% c("Sample")) %>%
+  filter(`Clean relative abd. on sample` >= 0.0005) %>%
+  filter(`Primer expected length` %in% c("in range")) %>%
+  filter(`BLASTn pseudo-score` >= 80) %>%
+  filter(`Kingdom (BLASTn)` %in% c("Metazoa")) %>%
+  # filter(`Class (BLASTn)` %in% c("Actinopteri")) %>%
+  # filter((`Contamination status` %in% c("True detection") & Type %in% c("Sample") ) |Type %in% c("PCR control") ) %>%
+  # filter((`Contamination status` %in% c("True detection") )) %>%
+                    # filter((!str_detect( string = `Final ID (BLASTn)`,pattern = c("environmental") ))) %>%
+  group_by(`Curated ID`,Unique_File_name,`Read origin`) %>%
+  # group_by(`Final ID (BLASTn)`,Sample) %>%
+  # group_by(`Genus (BLASTn)`,Sample) %>%
+  # group_by(Identification,Unique_File_name,`Read origin`) %>%
+  # group_by(`Final ID (DADA2)`,Unique_File_name,`Read origin`,`ASV (Sequence)`) %>%
+  # group_by(`Final ID (BLASTn)`,sample_Sample,`Read origin`,`ASV (Sequence)`) %>%
+  # group_by(`Final ID (BLASTn)`,Unique_File_name,`Read origin`,`ASV (Sequence)`) %>%
+  # mutate("Relative abundance on sample sum (%)" = round(sum(`Relative abundance on sample`),digits = 3),
+  mutate("Relative abundance on sample sum (%)" = round(sum(`Clean relative abd. on sample`)*100,digits = 3),
+         "Num ASVs per ID" = length(unique(`ASV (Sequence)`))) %>% 
+  ungroup() %>% 
+  group_by(`Curated ID`,`Read origin`) %>%
+  # group_by(`Genus (BLASTn)`) %>% 
+  mutate("Min BLASTn pseudo-score" = round(min(`BLASTn pseudo-score`),digits = 2)
+         ) %>%
+  ungroup() %>% 
+  select(c("Min BLASTn pseudo-score","Unique_File_name", "Curated ID", "Metadata 1","Metadata 2", "Relative abundance on sample sum (%)", "Family (BLASTn)", "Order (BLASTn)", "Class (BLASTn)")) %>% 
+  unique() %>% 
+  # filter(`Relative abundance on sample sum (%)` > 0.05) %>%
+  # unite(col = ID_score,sep = "   ", `Curated ID`,
+  #       `Min. BLASTn pseudo-score`) %>% 
+  ggplot(aes( 
+    # x = interaction(`Sample name`, Unique_File_name, sep = " - "),
+    x = interaction(Unique_File_name, `Metadata 1`, sep = " - "),
+    # x = interaction(`Read origin`,Unique_File_name,sep = " "),
+    # x = interaction(`Read origin`,Sample,sep = " "),
+    # x = `Sample name`,
+    # x = str_remove(Sample,pattern = "-MiFish|-MiBird"),
+  # ggplot(aes(x=`Metadata 1`,
+             # y=`Curated ID`,
+             # y=Identification,
+             y = interaction(`Curated ID`,`Min BLASTn pseudo-score`,sep = " / ",lex.order = T),
+             # y = interaction(`Genus (BLASTn)`,`Min BLASTn pseudo-score`,sep = " / "),
+             # y=interaction(`Final ID (DADA2)`,`Final ID (BLASTn)`,sep = " / "),
+             # y=`ID_score`,
+             fill =`Relative abundance on sample sum (%)`,
+             # col=`Possible contamination`,
+                                                 # group=`ASV (Sequence)`,
+             # group=`Genus (BLASTn)`
+             group=`Curated ID`
+             # linetype = `Possible contamination`,
+             # label = `Num ASVs per ID`
+             )) +
+  geom_tile(linewidth=0.25,
+            height = 0.75,
+            width = 0.75) +
+  geom_text(aes(label = round(`Relative abundance on sample sum (%)`,digits = 1),
+                col = `Relative abundance on sample sum (%)`/ 10),
+            size = 1.5
+            
+             # ,fill="white", label.size = 0.01, col = "Black",show.legend = TRUE
+             ) +
+  # stat_contour(aes(z=`Possible contamination`),
+  #              color = c("#ff000d",NA)) +
+  # scale_fill_gradientn(name = "Relative abd.\n on sample (%)",
+  scale_fill_gradientn(name = "Abundância relativa\nna amostra (%)",
+                       # colours = c("white","dark red","red", "yellow","green","dark green","blue"),
+                       colours = c("white", "yellow","green","dark green","blue"),
+                       # colours = viridis::viridis(n = 10,direction = -1),
+                       values = c(0,1),
+                       breaks = c(0.001,0.01, 0.05, 0.25,1,2.5,5,10,25,50,100),
+                       na.value ="white",
+                       trans="log10")+
+  scale_colour_gradientn(name = "Abundância relativa\nna amostra (%)",
+                       # colours = c("white","dark red","red", "yellow","green","dark green","blue"),
+                       colours = rev(c("white", "yellow","green","dark green","blue")),
+                       # colours = viridis::viridis(n = 10,direction = -1),
+                       values = c(0,1),
+                       breaks = c(0.001,0.01, 0.05, 0.25,1,2.5,5,10,25,50,100),
+                       na.value ="white",
+                       trans="log10") +
+  # scale_colour_manual(values = c("#d91133",NA)) +
+  scale_linetype_manual(values=c("solid",NA)) +
+  # guides(color = guide_legend(override.aes = list(fill = "white", 
+  #                                                 size = 10))) +
+  theme_grey(base_line_size = 0.025,base_size = 8) +
+  # theme(axis.text.x = element_text(angle = 0,hjust = 1)) +
+  xlab("Pontos de coleta") +
+  # ylab("Espécies") +
+  ylab("BLASTn Identification / Minimum BLASTn pseudo-score") +
+  # ylab("Identificação DADA2 / Identificação BLASTn") +
+    # scale_y_discrete(limits=rev) +
+  ggtitle(label = paste0("LGC - ",project, " - ",Sys.Date()),
+          # ggtitle(label = paste0("ECOMOL - ",project, " - ",Sys.Date()),
+              # subtitle = "Espécies identificados nas amostras\n             (com BLASTn pseudo-score >= 98% e ASVs de tamanho entre 221 e 256 - apenas cordados)") +                                                                # Change font size
+              # subtitle = "Número de ASVs por espécie: Identificações por BLASTn com >= 98% de similaridade") +      
+              # subtitle = "Número de ASVs por espécie: Identificações por BLASTn com >= 90% de similaridade & RRA limpo > 0.5%") +      
+              # subtitle = "Abundância relativa de cada identificação obtida por BLASTn, sem cortes de abundância") +      
+              # subtitle = "Abundância relativa de cada identificação obtida por BLASTn, considerando apenas IDs com BLASTn pseudo-score >= 80% e Abundância relativa >= 0.5%") +      
+              subtitle = "Abundância relativa de cada identificação obtida por BLASTn\nIDs com BLASTn pseudo-score >= 80% e RRA >= 0.05%") +      
+  # \n ASVs detectadas nos controles negativos já removidas das amostras.
+    # facet_grid(rows = vars(`Class (BLASTn)`,`Order (BLASTn)`),
+    # facet_grid(rows = vars(`Phylum (BLASTn)`,`Class (BLASTn)`,`Order (BLASTn)`), 
+    facet_grid(rows = vars(`Class (BLASTn)`,`Order (BLASTn)`,`Family (BLASTn)`),
+    # facet_grid(rows = vars(`Class (DADA2)`,`Order (DADA2)`,`Family (DADA2)`),
+    # facet_grid(rows = vars(`Order (BLASTn)`,`Family (BLASTn)`),
+               # cols = vars(Primer),
+               # cols = vars(Researcher,Project),
+               cols = vars(`Metadata 1`),
+               # cols = vars(`Metadata 9`,`Metadata 11`,`Metadata 6`,`Metadata 7`),
+               # cols = vars(Project,metadata_1),
+               # cols = vars(Local,Tratamento),
+                                # labeller = labeller(`Metadata 3` = supp.labs),
+    # facet_grid(rows = vars(`Possible contamination`,`Read origin`),
+               # cols = vars(Origin),
+               scale = 'free',space = 'free',
+    labeller = label_wrap_gen(width=12)) +
+  
+  
+  # Change font size
+              # subtitle = "Espécies identificados nas amostras\n             (com BLASTn pseudo-score >= 98% & RRA >= 0.05) - apenas peixes.") +                                                                # Change font size
+  theme(legend.position = "bottom",
+        strip.text.y = element_text(size = 10,angle = 0),
+        strip.text.x = element_text(size = 10),
+        plot.title = element_text(size=12),
+        plot.subtitle = element_text(size=10),
+        axis.text.y = element_text(size=8),
+        axis.title.x =element_text(size=14), 
+        axis.title.y =element_text(size=14), 
+        axis.text.x = element_text(size=8,angle = 45, hjust = 1),
+        legend.text= element_text(size=8),
+        legend.title = element_text(size=10),
+        legend.key.width = unit(4, 'cm'),
+        legend.key.height = unit(0.5, 'cm'),
+        panel.border = element_rect(colour = "#000000", fill = NA),
+        panel.grid = element_line(colour = "#ffffff",linewidth = 0.01)
+        )  +
+  geom_vline(xintercept = c(seq(0.5,220.5,1)), linewidth = 0.1) +
+  guides(colour="none")
+# facet_wrap2(facets = `Phylum (BLASTn)`~ Metadata 1)
+
+# IDs_smpls_heat
+# pg <- ggplotGrob(IDs_smpls_heat)
+# 
+# 
+# 
+# for(i in which(grepl("strip-r", pg$layout$name))){
+#   pg$grobs[[i]]$layout$clip <- "off"
+# }
+# grid::grid.draw(pg)
+
+
+
+ggsave(file = paste0(figs_path,"/",
+                     project_name,"-","heatmap","-Sps_BLASTn_abd-CURATED.pdf"),
+                     # unique(smp_abd_ID_Final$Project),"/",
+                     # unique(smp_abd_ID_Final$Project),"-heatmap","-Sps_BLASTn.pdf",collapse = ""),
+     plot = IDs_smpls_heat,
+     device = "pdf",
+     width = ifelse(N_samples <= 10, 15, (N_samples)+16),
+     height = ifelse(N_IDs <= 20, 10, N_IDs/4+12),
+     units = "cm",
+     limitsize = FALSE,
+     dpi = 300)
+
+}
+
+
+```
 
 
 

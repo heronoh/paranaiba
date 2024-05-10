@@ -10,6 +10,8 @@
   library(Biostrings)
   library(phangorn)
   library(msa)
+  library(ape)
+  library(mergeTrees)
 }
 
 # Load fasta seqs ----
@@ -101,6 +103,8 @@ plot(cnet, show.edge.label=TRUE)
 
 ASVs_tree <-  fitJC$tree
 
+fitJC$
+
 
                   # calculate distance matrix ----
 
@@ -128,16 +132,42 @@ ASVs_tree <-  fitJC$tree
 
 
 # write/read tree ----
+# ape::write.tree(phy = bs,
+                # file = "/home/heron/prjcts/paranaiba/results/paranaiba_ASVs_bootstraps.nwk")
+
+                  # write/read tree ----
 ape::write.tree(phy = ASVs_tree,
                 file = "/home/heron/prjcts/paranaiba/results/paranaiba_ASVs_tree.nwk")
 
+# ASVs_tree_boot <- read.tree(file = "/home/heron/prjcts/paranaiba/results/paranaiba_ASVs_bootstraps.nwk")
 ASVs_tree <- read.tree(file = "/home/heron/prjcts/paranaiba/results/paranaiba_ASVs_tree.nwk")
 
 
+data(woodmouse)
 
 
-#add labels ----
+ASVs_seqs_align
 
+ASVs_seqs_align_bin <- ape::as.DNAbin(ASVs_seqs_align)
+
+f <- function(x) nj(dist.dna(x))
+
+
+#bootstra ----
+bs<-boot.phylo(phy = ASVs_tree, ASVs_seqs_align_bin, f, quiet = TRUE)
+
+
+ASVs_tree$node.label <- bs
+
+ASVs_tree
+
+bs_tibble <- tibble(
+  # hard-code node ID: internal nodes start after tip nodes,
+  # and phy$node.label is in the same order as internal nodes
+  "node" = 1:Nnode(ASVs_tree) + Ntip(ASVs_tree),
+  # Don't print BS < 50%
+  # (or to show all BS, just do `bootstrap = phy$node.label`)
+  "bootstrap" = ifelse(ASVs_tree < 50, "", ASVs_tree$node.label))
 
 #read metadata table ----
 metadata_tbl <- read.csv(file =  "/home/heron/prjcts/paranaiba/results/paranaiba-todas_infos_ASVs-2024-04-12.csv",
@@ -167,7 +197,6 @@ metadata_tbl <- read.csv(file =  "/home/heron/prjcts/paranaiba/results/paranaiba
 
 
   ## random set of 100 rotations
-z
   ## tree all scrambled up
   ## the objective function going to zero indicated fully
 ## unscrambled
@@ -182,25 +211,33 @@ z
   #
   #
   #
-  #
-  #
+
+
   # ordered_tip_names <- tips_metadata %>%
-  #   arrange(`Order (BLASTn)`,`Family (BLASTn)`) %>%
+  #   arrange(`Order (BLASTn)`) %>%
   #   pull(tip_label)
   #
-  # tip_order <- setNames(1:Ntip(ASVs_tree),ordered_tip_names)
+  #
+  # ASVs_tree$tip.label
+  #
+  #
+  # tip_order <- setNames(match(ASVs_tree$tip.label,ordered_tip_names),ordered_tip_names)
   #
   #
   # ASVs_tree <- phytools::minRotate(tree = ASVs_tree,
   #                                  x = tip_order )
-
-
+  #
+  #
+  #
+  # ASVs_tree <- phytools::untangle(ASVs_tree,method="reorder")
+  #
+  #
 # plot tree ----
 
 options(ignore.negative.edge = TRUE)
 
 #set anotations position relative to tip
-tip_alignment <- FALSE
+tip_alignment <- TRUE
 
 
 
@@ -213,48 +250,50 @@ tip_alignment <- FALSE
   geom_treescale(width = 0.4)  +
   theme_tree2() +
 
+    # `Curated ID`              #####################
+  geom_tiplab(
+    aes(label = `Curated ID`, col = `Curated ID`),
+    offset = 0.027,
+    linetype = "blank" ,
+    geom = "text",
+    align = tip_alignment) +
+    scale_color_manual(values = viridis::turbo(n = 10)) +
+
     # BLASTn pseudo-score      #####################
-    geom_tiplab(
+  geom_tiplab(
     aes(label = `BLASTn pseudo-score`,
         fill = `BLASTn pseudo-score`),
     offset = 0.053,
     geom = "label",
     size = 2,
     linetype = "blank" ,
-    align = FALSE) +
+    align = tip_alignment) +
     scale_fill_gradientn(name = "BLASTn pseudo-score",
                          colours = c("white","red","yellow","green","dark green"),
-                         values = c(0.6,1),
-                         na.value = "white") +
-
-    # `Curated ID`              #####################
-    geom_tiplab(
-      aes(label = `Curated ID`, col = `Curated ID`),
-      offset = 0.027,
-      linetype = "blank" ,
-      geom = "text",
-      align = tip_alignment) +
-    scale_color_manual(values = viridis::turbo(n = 10)) +
-
+    values = c(0.6,1),
+    na.value = "white") +
 
     # Order      #####################
-    geom_tiplab(
-      aes(label = `Order (BLASTn)`, col = `Order (BLASTn)`),
-      offset = 0.09,
-      linetype = "blank" ,
-      geom = "text",
-      align = tip_alignment) +
+  geom_tiplab(
+    aes(label = `Order (BLASTn)`, col = `Order (BLASTn)`),
+    offset = 0.12,
+    linetype = "blank" ,
+    geom = "text",
+    align = tip_alignment) +
     scale_color_manual(values = viridis::turbo(n = 10)) +
-
     # Family      #####################
-    geom_tiplab(
-      aes(label = `Family (BLASTn)`, col = `Family (BLASTn)`),
-      offset = 0.12,
-      linetype = "blank" ,
-      geom = "text",
-      align = tip_alignment) +
+  geom_tiplab(
+    aes(label = `Family (BLASTn)`, col = `Family (BLASTn)`),
+    offset = 0.09,
+    linetype = "blank" ,
+    geom = "text",
+    align = tip_alignment) +
     scale_color_manual(values = viridis::turbo(n = 105)) +
-    guides(col = "none")
+    guides(col = "none") +
+    geom_nodelab(aes(label = nodesupport))
+    %<+% bs_tibble +
+    # now we can show BS values using geom_text()
+    geom_text(aes(label=bootstrap), hjust=-.25, size = 3)
 
 
 
@@ -283,3 +322,4 @@ tree_plot
   #https://www.molecularecologist.com/2017/02/08/phylogenetic-trees-in-r-using-ggtree/
   #https://epirhandbook.com/en/phylogenetic-trees-1.html
   #https://boopsboops.blogspot.com/2010/10/negative-branch-lengths-in-neighbour.html
+#https://cran.r-project.org/web/packages/phangorn/vignettes/IntertwiningTreesAndNetworks.html
