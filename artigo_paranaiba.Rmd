@@ -779,7 +779,7 @@ curated_smp_abd_ID %>%
   arrange(Unique_File_name) %>% 
   # mutate("Unique_File_name" = factor(Unique_File_name, levels = sample_levels)) %>%
   filter(Type %in% c("Sample")) %>%
-  filter(`Clean relative abd. on sample` >= 0.0005) %>%
+  # filter(`Clean relative abd. on sample` >= 0.0005) %>%
   filter(`Primer expected length` %in% c("in range")) %>%
   filter(`BLASTn pseudo-score` >= 80) %>%
   filter(`Kingdom (BLASTn)` %in% c("Metazoa")) %>%
@@ -795,7 +795,7 @@ curated_smp_abd_ID %>%
   # group_by(`Final ID (BLASTn)`,sample_Sample,`Read origin`,`ASV (Sequence)`) %>%
   # group_by(`Final ID (BLASTn)`,Unique_File_name,`Read origin`,`ASV (Sequence)`) %>%
   # mutate("Relative abundance on sample sum (%)" = round(sum(`Relative abundance on sample`),digits = 3),
-  mutate("Relative abundance on sample sum (%)" = round(sum(`Clean relative abd. on sample`)*100,digits = 3),
+  mutate("Relative abundance on sample sum (%)" = round(sum(`Clean relative abd. on sample`)*100,digits = 4),
          "Num ASVs per ID" = length(unique(`ASV (Sequence)`))) %>% 
   ungroup() %>% 
   group_by(`Curated ID`,`Read origin`) %>%
@@ -816,9 +816,9 @@ curated_smp_abd_ID %>%
     # x = `Sample name`,
     # x = str_remove(Sample,pattern = "-MiFish|-MiBird"),
   # ggplot(aes(x=`Metadata 1`,
-             # y=`Curated ID`,
+             y=`Curated ID`,
              # y=Identification,
-             y = interaction(`Curated ID`,`Min BLASTn pseudo-score`,sep = " / ",lex.order = T),
+             # y = interaction(`Curated ID`,`Min BLASTn pseudo-score`,sep = " / ",lex.order = T),
              # y = interaction(`Genus (BLASTn)`,`Min BLASTn pseudo-score`,sep = " / "),
              # y=interaction(`Final ID (DADA2)`,`Final ID (BLASTn)`,sep = " / "),
              # y=`ID_score`,
@@ -833,16 +833,17 @@ curated_smp_abd_ID %>%
   geom_tile(linewidth=0.25,
             height = 0.75,
             width = 0.75) +
-  geom_text(aes(label = round(`Relative abundance on sample sum (%)`,digits = 1),
+  geom_text(aes(label = round(`Relative abundance on sample sum (%)`,digits = 3),
                 col = `Relative abundance on sample sum (%)`/ 10),
-            size = 1.5
+            size = 3
             
              # ,fill="white", label.size = 0.01, col = "Black",show.legend = TRUE
              ) +
   # stat_contour(aes(z=`Possible contamination`),
   #              color = c("#ff000d",NA)) +
   # scale_fill_gradientn(name = "Relative abd.\n on sample (%)",
-  scale_fill_gradientn(name = "Abundância relativa\nna amostra (%)",
+  # scale_fill_gradientn(name = "Abundância relativa\nna amostra (%)",
+  scale_fill_gradientn(name = "RRA (%)",
                        # colours = c("white","dark red","red", "yellow","green","dark green","blue"),
                        colours = c("white", "yellow","green","dark green","blue"),
                        # colours = viridis::viridis(n = 10,direction = -1),
@@ -850,7 +851,8 @@ curated_smp_abd_ID %>%
                        breaks = c(0.001,0.01, 0.05, 0.25,1,2.5,5,10,25,50,100),
                        na.value ="white",
                        trans="log10")+
-  scale_colour_gradientn(name = "Abundância relativa\nna amostra (%)",
+  # scale_colour_gradientn(name = "Abundância relativa\nna amostra (%)",
+  scale_colour_gradientn(name = "RRA (%)",
                        # colours = c("white","dark red","red", "yellow","green","dark green","blue"),
                        colours = rev(c("white", "yellow","green","dark green","blue")),
                        # colours = viridis::viridis(n = 10,direction = -1),
@@ -864,28 +866,29 @@ curated_smp_abd_ID %>%
   #                                                 size = 10))) +
   theme_grey(base_line_size = 0.025,base_size = 8) +
   # theme(axis.text.x = element_text(angle = 0,hjust = 1)) +
-  xlab("Pontos de coleta") +
+  xlab("") +
   # ylab("Espécies") +
-  ylab("BLASTn Identification / Minimum BLASTn pseudo-score") +
+  # ylab("BLASTn Identification / Minimum BLASTn pseudo-score") +
+  ylab("") +
   # ylab("Identificação DADA2 / Identificação BLASTn") +
     # scale_y_discrete(limits=rev) +
-  ggtitle(label = paste0("LGC - ",project, " - ",Sys.Date()),
+  # ggtitle(label = paste0("LGC - ",project, " - ",Sys.Date()),
           # ggtitle(label = paste0("ECOMOL - ",project, " - ",Sys.Date()),
               # subtitle = "Espécies identificados nas amostras\n             (com BLASTn pseudo-score >= 98% e ASVs de tamanho entre 221 e 256 - apenas cordados)") +                                                                # Change font size
               # subtitle = "Número de ASVs por espécie: Identificações por BLASTn com >= 98% de similaridade") +      
               # subtitle = "Número de ASVs por espécie: Identificações por BLASTn com >= 90% de similaridade & RRA limpo > 0.5%") +      
               # subtitle = "Abundância relativa de cada identificação obtida por BLASTn, sem cortes de abundância") +      
               # subtitle = "Abundância relativa de cada identificação obtida por BLASTn, considerando apenas IDs com BLASTn pseudo-score >= 80% e Abundância relativa >= 0.5%") +      
-              subtitle = "Abundância relativa de cada identificação obtida por BLASTn\nIDs com BLASTn pseudo-score >= 80% e RRA >= 0.05%") +      
+              # subtitle = "Abundância relativa de cada identificação obtida por BLASTn\nIDs com BLASTn pseudo-score >= 80% e RRA >= 0.05%") +      
   # \n ASVs detectadas nos controles negativos já removidas das amostras.
     # facet_grid(rows = vars(`Class (BLASTn)`,`Order (BLASTn)`),
     # facet_grid(rows = vars(`Phylum (BLASTn)`,`Class (BLASTn)`,`Order (BLASTn)`), 
-    facet_grid(rows = vars(`Class (BLASTn)`,`Order (BLASTn)`,`Family (BLASTn)`),
+    # facet_grid(rows = vars(`Class (BLASTn)`,`Order (BLASTn)`,`Family (BLASTn)`),
     # facet_grid(rows = vars(`Class (DADA2)`,`Order (DADA2)`,`Family (DADA2)`),
-    # facet_grid(rows = vars(`Order (BLASTn)`,`Family (BLASTn)`),
+    facet_grid(rows = vars(`Order (BLASTn)`,`Family (BLASTn)`),
                # cols = vars(Primer),
                # cols = vars(Researcher,Project),
-               cols = vars(`Metadata 1`),
+               cols = vars(`Metadata 1`,`Metadata 2`),
                # cols = vars(`Metadata 9`,`Metadata 11`,`Metadata 6`,`Metadata 7`),
                # cols = vars(Project,metadata_1),
                # cols = vars(Local,Tratamento),
@@ -903,7 +906,7 @@ curated_smp_abd_ID %>%
         strip.text.x = element_text(size = 10),
         plot.title = element_text(size=12),
         plot.subtitle = element_text(size=10),
-        axis.text.y = element_text(size=8),
+        axis.text.y = element_text(size=10),
         axis.title.x =element_text(size=14), 
         axis.title.y =element_text(size=14), 
         axis.text.x = element_text(size=8,angle = 45, hjust = 1),
@@ -914,8 +917,11 @@ curated_smp_abd_ID %>%
         panel.border = element_rect(colour = "#000000", fill = NA),
         panel.grid = element_line(colour = "#ffffff",linewidth = 0.01)
         )  +
-  geom_vline(xintercept = c(seq(0.5,220.5,1)), linewidth = 0.1) +
-  guides(colour="none")
+  # geom_vline(xintercept = c(seq(0.5,220.5,1)), linewidth = 0.1) +
+  guides(colour="none") +
+   theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
 # facet_wrap2(facets = `Phylum (BLASTn)`~ Metadata 1)
 
 # IDs_smpls_heat
@@ -936,8 +942,8 @@ ggsave(file = paste0(figs_path,"/",
                      # unique(smp_abd_ID_Final$Project),"-heatmap","-Sps_BLASTn.pdf",collapse = ""),
      plot = IDs_smpls_heat,
      device = "pdf",
-     width = ifelse(N_samples <= 10, 15, (N_samples)+16),
-     height = ifelse(N_IDs <= 20, 10, N_IDs/4+12),
+     width = ifelse(N_samples <= 10, 15, (N_samples)+18),
+     height = ifelse(N_IDs <= 20, 10, N_IDs/4+16),
      units = "cm",
      limitsize = FALSE,
      dpi = 300)
@@ -1020,11 +1026,11 @@ curated_smp_abd_ID %>%colnames()
     FINAL_tbl_IDs <-
   curated_smp_abd_ID %>%
   filter(Type %in% c("Sample")) %>% 
-  
   # mutate("Sample name" = `Metadata 1`) %>% 
   mutate("Sample name" = str_remove_all(Unique_File_name,
                                         pattern = "EM118_")) %>% 
   mutate("agrupador" = `Metadata 1`) %>% 
+  arrange(`Sample name`) %>% 
   ###_______________remover amostras que atrapalham a visualização_______________###
     # filter(!`Sample name` %in% amostras_removidas) %>%
     dplyr::select(-c(      
@@ -1179,7 +1185,7 @@ FINAL_tbl_IDs$`Sample name` %>% unique()
 
 
 
-
+all_IDs_NMDS_tbl
 
 
 
@@ -1252,7 +1258,6 @@ colnames(all_IDs_NMDS_df)[4:ncol(all_IDs_NMDS_df)] <- colnames(all_IDs_NMDS_df)[
   str_replace_all(pattern = "\\.",replacement = "") %>% 
   str_replace_all(pattern = "\\(",replacement = "") %>% 
   str_replace_all(pattern = "\\)",replacement = "")
-
 
 
 
@@ -1627,6 +1632,37 @@ ggsave(file = paste0(figs_path,"/",
 
 View(site.scrs)
 
+
+
+#permanova ----
+
+all_IDs_NMDS_df <- all_IDs_NMDS_df %>% 
+  mutate("area" = case_when(agrupador %in% c("P6") ~ "Downstream dam",
+                            TRUE ~ "Upstream dam")) %>% 
+  relocate("area")
+  
+
+permanova_res <- adonis2(all_IDs_NMDS_df[,5:ncol(all_IDs_NMDS_df)] ~ all_IDs_NMDS_df$area, method = "jaccard", data= all_IDs_NMDS_df, permutations = 10000)
+
+permanova_res
+summary(permanova_res)
+```
+
+
+#Write comm tbl ----
+
+
+```{r eval=FALSE, echo=TRUE}
+all_IDs_NMDS_df %>% 
+  writexl::write_xlsx(path = "/home/heron/prjcts/paranaiba/results/tabela_comunidade_bray.xlsx",
+                      col_names = T)
+
+all_IDs_NMDS_df %>%
+  mutate(across(starts_with('ID_'), jaccarize)) %>% 
+  writexl::write_xlsx(path = "/home/heron/prjcts/paranaiba/results/tabela_comunidade_jaccard.xlsx",
+                      col_names = T)
+
+
 ```
 
 
@@ -1708,24 +1744,24 @@ spec2_tidy_rch <- tibble("Richness" = spec1$richness,
 
 collector_plot <- spec2_tidy %>% ggplot(aes(x = Sample,y = Value,group=Sample))+
   # geom_point() +
-  geom_boxplot(col ="#002b02",
-               fill ="#002b02",notch = TRUE,
-               alpha = 0.33,width = 0.5) +
+  geom_boxplot(col ="#005602",
+               fill ="#005602",notch = TRUE,
+               alpha = 0.33,width = 0.5,outlier.shape = NA) +
        stat_boxplot(geom = "errorbar", width = 0.25,linetype=2) +
-  geom_jitter(size=0.5,
+  geom_jitter(size=0.01,
               width = 0.25,
               # height = 0,
-              col="#002b02") +
+              col="#005602") +
   geom_line(data = spec2_tidy_rch,
             inherit.aes = F,
             linewidth = 2.5,
-            col ="#002b02",
+            col ="#005602",
             alpha = 0.50,
             aes(x = Sample, y = Richness)) +
-  theme_minimal() +
+  theme_bw() +
   theme(panel.grid.major = element_line(colour = "grey", size = rel(0.25))) +
   ylab(label = "Richness") +
-  xlab(label = "Sites") +
+  xlab(label = "Sites/Samples") +
   scale_x_continuous(breaks = seq(1,12,1))
 
 
@@ -1765,6 +1801,162 @@ ggplot() +
   geom_point(data=data, aes(x=Sites, y=Richness)) +
   geom_line(data=data, aes(x=Sites, y=Richness)) +
   geom_ribbon(data=data ,aes(x=Sites, ymin=(Richness-2*SD),ymax=(Richness+2*SD)),alpha=0.2)
+
+
+
+specpool(x, pool, smallsample = TRUE)
+estimateR(x, ...)
+specpool2vect(X, index = c("jack1","jack2", "chao", "boot","Species"))
+poolaccum(x, permutations = 100, minsize = 3)
+estaccumR(x, permutations = 100, parallel = getOption("mc.cores"))
+## S3 method for class 'poolaccum'
+summary(object, display, alpha = 0.05, ...)
+## S3 method for class 'poolaccum'
+plot(x, alpha = 0.05, type = c("l","g"), ...)
+
+
+
+
+
+
+
+
+
+#----
+```
+
+#Collector curve per sample  ----
+
+
+```{r eval=FALSE, echo=TRUE}
+
+all_IDs_NMDS_df %>% colnames() %>% duplicated()
+all_IDs_NMDS_df$ID_Apareiodon_sp2 %>% jspecarize()
+
+library(reshape2)
+library(ggrepel)
+
+
+#selecione 
+
+# P1
+P1_spec <- vegan::specaccum(comm = all_IDs_NMDS_df_jc[c(1:2),4:ncol(all_IDs_NMDS_df_jc)])
+# P2
+P2_spec <- vegan::specaccum(comm = all_IDs_NMDS_df_jc[c(3:4),4:ncol(all_IDs_NMDS_df_jc)])
+# P3
+P3_spec <- vegan::specaccum(comm = all_IDs_NMDS_df_jc[c(5:6),4:ncol(all_IDs_NMDS_df_jc)])
+# P4
+P4_spec <- vegan::specaccum(comm = all_IDs_NMDS_df_jc[c(7:8),4:ncol(all_IDs_NMDS_df_jc)])
+# P5
+P5_spec <- vegan::specaccum(comm = all_IDs_NMDS_df_jc[c(9:10),4:ncol(all_IDs_NMDS_df_jc)])
+# P6
+P6_spec <- vegan::specaccum(comm = all_IDs_NMDS_df_jc[c(11:12),4:ncol(all_IDs_NMDS_df_jc)])
+
+
+P1_spec$sd
+P2_spec$sd
+P3_spec$sd
+P4_spec$sd
+P5_spec$sd
+P6_spec$sd
+
+
+P1_tbl <- P1_spec1$richness %>% melt(value.name = "Richness") %>% as_tibble(rownames = "Replicates") %>% mutate("Site" = "P1")
+P2_tbl <- P2_spec1$richness %>% melt(value.name = "Richness") %>% as_tibble(rownames = "Replicates") %>% mutate("Site" = "P2")
+P3_tbl <- P3_spec1$richness %>% melt(value.name = "Richness") %>% as_tibble(rownames = "Replicates") %>% mutate("Site" = "P3")
+P4_tbl <- P4_spec1$richness %>% melt(value.name = "Richness") %>% as_tibble(rownames = "Replicates") %>% mutate("Site" = "P4")
+P5_tbl <- P5_spec1$richness %>% melt(value.name = "Richness") %>% as_tibble(rownames = "Replicates") %>% mutate("Site" = "P5")
+P6_tbl <- P6_spec1$richness %>% melt(value.name = "Richness") %>% as_tibble(rownames = "Replicates") %>% mutate("Site" = "P6")
+
+
+spec_per_site <- bind_rows(P1_tbl, P2_tbl, P3_tbl, P4_tbl, P5_tbl, P6_tbl) %>% 
+  mutate(Replicates = as.numeric(Replicates))
+
+
+P1_tbl_sd <- P1_spec1$sd %>% melt(value.name = "SD") %>% as_tibble(rownames = "Replicates") %>% mutate("Site" = "P1")
+P2_tbl_sd <- P2_spec1$sd %>% melt(value.name = "SD") %>% as_tibble(rownames = "Replicates") %>% mutate("Site" = "P2")
+P3_tbl_sd <- P3_spec1$sd %>% melt(value.name = "SD") %>% as_tibble(rownames = "Replicates") %>% mutate("Site" = "P3")
+P4_tbl_sd <- P4_spec1$sd %>% melt(value.name = "SD") %>% as_tibble(rownames = "Replicates") %>% mutate("Site" = "P4")
+P5_tbl_sd <- P5_spec1$sd %>% melt(value.name = "SD") %>% as_tibble(rownames = "Replicates") %>% mutate("Site" = "P5")
+P6_tbl_sd <- P6_spec1$sd %>% melt(value.name = "SD") %>% as_tibble(rownames = "Replicates") %>% mutate("Site" = "P6")
+
+
+spec_per_site_sd <- bind_rows(P1_tbl_sd, P2_tbl_sd, P3_tbl_sd, P4_tbl_sd, P5_tbl_sd, P6_tbl_sd) %>% 
+  mutate(Replicates = as.numeric(Replicates))
+
+
+
+
+
+
+spec_per_site_complete <- spec_per_site %>% left_join(y = spec_per_site_sd,by = c("Site","Replicates"))
+
+# spec_per_site_complete$Replicates[spec_per_site_complete$Site == "P1" & spec_per_site_complete$Replicates == 1] <- 0.7
+# spec_per_site_complete$Replicates[spec_per_site_complete$Site == "P2" & spec_per_site_complete$Replicates == 1] <- 0.8
+# spec_per_site_complete$Replicates[spec_per_site_complete$Site == "P3" & spec_per_site_complete$Replicates == 1] <- 0.9
+# spec_per_site_complete$Replicates[spec_per_site_complete$Site == "P4" & spec_per_site_complete$Replicates == 1] <- 1
+# spec_per_site_complete$Replicates[spec_per_site_complete$Site == "P5" & spec_per_site_complete$Replicates == 1] <- 1.1
+# spec_per_site_complete$Replicates[spec_per_site_complete$Site == "P6" & spec_per_site_complete$Replicates == 1] <- 1.2
+
+
+  
+labels_tbl <- spec_per_site_complete %>% filter(Replicates == 2)
+
+
+
+collector_plot_per_sample <- spec_per_site_complete %>%
+  ggplot(aes(
+    x = Replicates,
+    y = Richness,
+    group = Site,
+    col = Site,
+    fill = Site,alpha = 0.75)) +
+  geom_line(linewidth = 2) +
+  geom_label_repel(
+    data = labels_tbl,
+    inherit.aes = F,
+    aes(
+    x = Replicates,
+    y = Richness,
+    label = Site,
+    col = Site,
+    alpha = 0.75),
+    nudge_x = 0.05) +
+  geom_errorbar(aes(ymin=Richness-SD, 
+                    ymax=Richness+SD), 
+                width= 0.05,
+                linetype = 2,
+                linewidth = 1,
+                alpha = 0.5) +
+  theme_bw() +
+  theme(panel.grid.major = element_line(colour = "grey", size = rel(0.25))) +
+  ylab(label = "Richness") +
+  xlab(label = "Sites/Samples") +
+  scale_x_continuous(breaks = seq(1,2,1)) + 
+  scale_colour_manual(values = cores) + 
+    guides(col = "none",
+           alpha = "none",
+           lable = "none")
+
+
+
+# https://r-charts.com/ggplot2/grid/#google_vignette
+
+
+collector_plot_per_sample
+
+ggsave(file = paste0(figs_path,"/",
+                     prjct_rad,"-",
+                     "Coletor-per_sample",Sys.Date(),
+                     # "-num_taxa_per_class-id80",
+                     ".pdf",
+                     collapse = ""),
+     plot = collector_plot_per_sample,
+     device = "pdf",
+     width = 16,
+     height = 12,
+     units = "cm",
+     dpi = 300)
 
 
 
@@ -2279,7 +2471,7 @@ FINAL_TBL %>%
 #Boxplot distance to centroids ----
 
 
-dist <- vegdist(all_IDs_NMDS_df[,16:ncol(all_IDs_NMDS_df)],method = "jaccard")
+dist <- vegdist(all_IDs_NMDS_df[,5:ncol(all_IDs_NMDS_df)],method = "jaccard")
 
 all_IDs_betadis <- betadisper(dist,all_IDs_NMDS_df$agrupador)
 
@@ -2295,14 +2487,12 @@ btdspr_tbl <- tibble("distances" = all_IDs_betadis$distances,
 library(ggpubr)
 
 btdspr_plot <- btdspr_tbl %>% mutate(group = factor(group,
-                                                    levels = c("PESMar",
-                                                               "Antigo",
-                                                               "Recente"))) %>%
-                                                    # levels = c("PESMar",
-                                                    #            "Antigo Perto",
-                                                    #            "Antigo Distante",
-                                                    #            "Recente Perto",
-                                                    #            "Recente Distante"))) %>%
+                                                    levels = c("P1",
+                                                               "P2",
+                                                               "P3",
+                                                               "P4",
+                                                               "P5",
+                                                               "P6"))) %>%
   ggplot(aes(x=group, 
              fill=group, 
              col=group, 
@@ -2315,11 +2505,6 @@ btdspr_plot <- btdspr_tbl %>% mutate(group = factor(group,
      c("PESMar","Antigo"),
      c("PESMar","Recente"),
      c("Antigo","Recente")
-
-          # c("PESMar","Antigo Perto"),
-     # c("PESMar","Antigo Distante"),
-     # c("PESMar","Recente Perto"),
-     # c("PESMar","Recente Distante")
      ),
               map_signif_level=TRUE,
               col="#bfbfbf",
@@ -2370,7 +2555,7 @@ library(betapart)
 unique(all_IDs_NMDS_df$agrupador)
 
 # all_IDs_NMDS_df_presence <- all_IDs_NMDS_df[,15:ncol(all_IDs_NMDS_df)]
-all_IDs_NMDS_df_presence <- 1*(all_IDs_NMDS_df[,16:ncol(all_IDs_NMDS_df)] > 0)
+all_IDs_NMDS_df_presence <- 1*(all_IDs_NMDS_df[,5:ncol(all_IDs_NMDS_df)] > 0)
 
 
 View(all_IDs_NMDS_df_presence)
@@ -2380,164 +2565,208 @@ dim()
 
 
 
-# 3 grupos ----
-all_NMDS_pres_PESMAr <- all_IDs_NMDS_df_presence[all_IDs_NMDS_df$agrupador == "PESMar",] 
-all_NMDS_pres_12 <- all_IDs_NMDS_df_presence[all_IDs_NMDS_df$agrupador == "Antigo",] 
-all_NMDS_pres_22 <- all_IDs_NMDS_df_presence[all_IDs_NMDS_df$agrupador == "Recente",] 
+# 6 grupos ----
+all_NMDS_pres_P1 <- all_IDs_NMDS_df_presence[all_IDs_NMDS_df$agrupador == "P1",] 
+all_NMDS_pres_P2 <- all_IDs_NMDS_df_presence[all_IDs_NMDS_df$agrupador == "P2",] 
+all_NMDS_pres_P3 <- all_IDs_NMDS_df_presence[all_IDs_NMDS_df$agrupador == "P3",] 
+all_NMDS_pres_P4 <- all_IDs_NMDS_df_presence[all_IDs_NMDS_df$agrupador == "P4",] 
+all_NMDS_pres_P5 <- all_IDs_NMDS_df_presence[all_IDs_NMDS_df$agrupador == "P5",] 
+all_NMDS_pres_P6 <- all_IDs_NMDS_df_presence[all_IDs_NMDS_df$agrupador == "P6",] 
 
 
 
 
-beta.meta_PESMAr <- beta.sample(all_NMDS_pres_PESMAr, index.family="sor",sites=10,samples=100)
-beta.meta_12 <- beta.sample(all_NMDS_pres_12, index.family="sor",sites=10,samples=100)
-beta.meta_22 <- beta.samp le(all_NMDS_pres_22, index.family="sor",sites=10,samples=100)
+beta.meta_P1 <- beta.sample(all_NMDS_pres_P1, index.family="sor",sites=2,samples=100)
+beta.meta_P2 <- beta.sample(all_NMDS_pres_P2, index.family="sor",sites=2,samples=100)
+beta.meta_P3 <- beta.sample(all_NMDS_pres_P3, index.family="sor",sites=2,samples=100)
+beta.meta_P4 <- beta.sample(all_NMDS_pres_P4, index.family="sor",sites=2,samples=100)
+beta.meta_P5 <- beta.sample(all_NMDS_pres_P5, index.family="sor",sites=2,samples=100)
+beta.meta_P6 <- beta.sample(all_NMDS_pres_P6, index.family="sor",sites=2,samples=100)
+# beta.meta_PESMAr <- beta.sample(all_NMDS_pres_PESMAr, index.family="sor",sites=10,samples=100)
+# beta.meta_12 <- beta.sample(all_NMDS_pres_12, index.family="sor",sites=10,samples=100)
+# beta.meta_22 <- beta.samp le(all_NMDS_pres_22, index.family="sor",sites=10,samples=100)
 
 
 
-boxplot((beta.meta_PESMAr$sampled.values$beta.SIM ), 
-        (beta.meta_12$sampled.values$beta.SIM ), 
-        (beta.meta_22$sampled.values$beta.SIM ),
+boxplot((beta.meta_P1$sampled.values$beta.SIM ),
+        (beta.meta_P2$sampled.values$beta.SIM ),
+        (beta.meta_P3$sampled.values$beta.SIM ),
+        (beta.meta_P4$sampled.values$beta.SIM ),
+        (beta.meta_P5$sampled.values$beta.SIM ),
+        (beta.meta_P6$sampled.values$beta.SIM ),
         
-        (beta.meta_PESMAr$sampled.values$beta.SOR ), 
-        (beta.meta_12$sampled.values$beta.SOR ), 
-        (beta.meta_22$sampled.values$beta.SOR ),
+        (beta.meta_P1$sampled.values$beta.SOR ), 
+        (beta.meta_P2$sampled.values$beta.SOR ), 
+        (beta.meta_P3$sampled.values$beta.SOR ),
+        (beta.meta_P4$sampled.values$beta.SOR ),
+        (beta.meta_P5$sampled.values$beta.SOR ),
+        (beta.meta_P6$sampled.values$beta.SOR ),
         
-        (beta.meta_PESMAr$sampled.values$beta.SNE ), 
-        (beta.meta_12$sampled.values$beta.SNE ), 
-        (beta.meta_22$sampled.values$beta.SNE ), 
-        ylim=c(0,1), names =c("PESMar SIM",
-                              "Antigo SIM",
-                              "Recente SIM",
-                              "PESMar SOR",
-                              "Antigo SOR",
-                              "Recente SOR",
-                              "PESMar SNE",
-                              "Antigo SNE",
-                              "Recente SNE"))
+        (beta.meta_P1$sampled.values$beta.SNE ), 
+        (beta.meta_P2$sampled.values$beta.SNE ), 
+        (beta.meta_P3$sampled.values$beta.SNE ), 
+        (beta.meta_P4$sampled.values$beta.SNE ), 
+        (beta.meta_P5$sampled.values$beta.SNE ), 
+        (beta.meta_P6$sampled.values$beta.SNE ), 
+        ylim=c(0,1), names =c("P1 SIM",
+                              "P2 SIM",
+                              "P3 SIM",
+                              "P4 SIM",
+                              "P5 SIM",
+                              "P6 SIM",
+                              "P1 SOR",
+                              "P2 SOR",
+                              "P3 SOR",
+                              "P4 SOR",
+                              "P5 SOR",
+                              "P6 SOR",
+                              "P1 SNE",
+                              "P2 SNE",
+                              "P3 SNE",
+                              "P4 SNE",
+                              "P5 SNE",
+                              "P6 SNE"))
 
 
 
 
 
-tbl_PESMAr <- tibble("SIM" = beta.meta_PESMAr$sampled.values$beta.SIM,
-                 "SOR" = beta.meta_PESMAr$sampled.values$beta.SOR,
-                 "SNE" = beta.meta_PESMAr$sampled.values$beta.SNE,
-                 "Status" = "PESMar")
+tbl_P1 <- tibble("SIM" = beta.meta_P1$sampled.values$beta.SIM,
+                 "SOR" = beta.meta_P1$sampled.values$beta.SOR,
+                 "SNE" = beta.meta_P1$sampled.values$beta.SNE,
+                 "Status" = "P1")
+
+tbl_P2 <- tibble("SIM" = beta.meta_P2$sampled.values$beta.SIM,
+                 "SOR" = beta.meta_P2$sampled.values$beta.SOR,
+                 "SNE" = beta.meta_P2$sampled.values$beta.SNE,
+                 "Status" = "P2")
+
+tbl_P3 <- tibble("SIM" = beta.meta_P3$sampled.values$beta.SIM,
+                 "SOR" = beta.meta_P3$sampled.values$beta.SOR,
+                 "SNE" = beta.meta_P3$sampled.values$beta.SNE,
+                 "Status" = "P3")
+
+tbl_P4 <- tibble("SIM" = beta.meta_P4$sampled.values$beta.SIM,
+                 "SOR" = beta.meta_P4$sampled.values$beta.SOR,
+                 "SNE" = beta.meta_P4$sampled.values$beta.SNE,
+                 "Status" = "P4")
+
+tbl_P5 <- tibble("SIM" = beta.meta_P5$sampled.values$beta.SIM,
+                 "SOR" = beta.meta_P5$sampled.values$beta.SOR,
+                 "SNE" = beta.meta_P5$sampled.values$beta.SNE,
+                 "Status" = "P5")
+
+tbl_P6 <- tibble("SIM" = beta.meta_P6$sampled.values$beta.SIM,
+                 "SOR" = beta.meta_P6$sampled.values$beta.SOR,
+                 "SNE" = beta.meta_P6$sampled.values$beta.SNE,
+                 "Status" = "P6")
 
 
 
 
-tbl_12 <- tibble("SIM" = beta.meta_12$sampled.values$beta.SIM,
-                 "SOR" = beta.meta_12$sampled.values$beta.SOR,
-                 "SNE" = beta.meta_12$sampled.values$beta.SNE,
-                 "Status" = "Antigo")
 
-
-tbl_22 <- tibble("SIM" = beta.meta_22$sampled.values$beta.SIM,
-                 "SOR" = beta.meta_22$sampled.values$beta.SOR,
-                 "SNE" = beta.meta_22$sampled.values$beta.SNE,
-                 "Status" = "Recente")
-
-
-
-beta_res_all <- bind_rows(tbl_PESMAr, 
-                          tbl_12, 
-                          tbl_22)
+beta_res_all <- bind_rows(tbl_P1,
+                          tbl_P2,
+                          tbl_P3,
+                          tbl_P4,
+                          tbl_P5,
+                          tbl_P6
+                          ) 
 
 
 # 5 grupos ----
-all_NMDS_pres_PESMAr <- all_IDs_NMDS_df_presence[all_IDs_NMDS_df$agrupador == "PESMar",] 
-all_NMDS_pres_12per <- all_IDs_NMDS_df_presence[all_IDs_NMDS_df$agrupador == "Antigo Perto",] 
-all_NMDS_pres_12lon <- all_IDs_NMDS_df_presence[all_IDs_NMDS_df$agrupador == "Antigo Distante",] 
-all_NMDS_pres_22per <- all_IDs_NMDS_df_presence[all_IDs_NMDS_df$agrupador == "Recente Perto",] 
-all_NMDS_pres_22lon <- all_IDs_NMDS_df_presence[all_IDs_NMDS_df$agrupador == "Recente Distante",] 
-
-
-
-
-beta.meta_PESMAr <- beta.sample(all_NMDS_pres_PESMAr, index.family="sor",sites=10,samples=100)
-beta.meta_12per <- beta.sample(all_NMDS_pres_12per, index.family="sor",sites=10,samples=100)
-beta.meta_12lon <- beta.sample(all_NMDS_pres_12lon, index.family="sor",sites=10,samples=100)
-beta.meta_22per <- beta.sample(all_NMDS_pres_22per, index.family="sor",sites=10,samples=100)
-beta.meta_22lon <- beta.sample(all_NMDS_pres_22lon, index.family="sor",sites=10,samples=100)
-
-
-
-boxplot((beta.meta_PESMAr$sampled.values$beta.SIM ), 
-        (beta.meta_12per$sampled.values$beta.SIM), 
-        (beta.meta_12lon$sampled.values$beta.SIM ), 
-        (beta.meta_22per$sampled.values$beta.SIM ), 
-        (beta.meta_22lon$sampled.values$beta.SIM ),
-        
-        (beta.meta_PESMAr$sampled.values$beta.SOR ), 
-        (beta.meta_12per$sampled.values$beta.SOR),
-        (beta.meta_12lon$sampled.values$beta.SOR ), 
-        (beta.meta_22per$sampled.values$beta.SOR ), 
-        (beta.meta_22lon$sampled.values$beta.SOR ),
-        
-        (beta.meta_PESMAr$sampled.values$beta.SNE ), 
-        (beta.meta_12per$sampled.values$beta.SNE), 
-        (beta.meta_12lon$sampled.values$beta.SNE ), 
-        (beta.meta_22per$sampled.values$beta.SNE ), 
-        (beta.meta_22lon$sampled.values$beta.SNE ), 
-        ylim=c(0,1), names =c("PESMar SIM",
-                              "Antigo Perto SIM",
-                              "Antigo Distante SIM",
-                              "Recente Perto SIM",
-                              "Recente Distante SIM",
-                              "PESMar SOR",
-                              "Antigo Perto SOR",
-                              "Antigo Distante SOR",
-                              "Recente Perto SOR",
-                              "Recente Distante SOR",
-                              "PESMar SNE",
-                              "Antigo Perto SNE",
-                              "Antigo Distante SNE",
-                              "Recente Perto SNE",
-                              "Recente Distante SNE"))
-
-
-
-
-
-tbl_PESMAr <- tibble("SIM" = beta.meta_PESMAr$sampled.values$beta.SIM,
-                 "SOR" = beta.meta_PESMAr$sampled.values$beta.SOR,
-                 "SNE" = beta.meta_PESMAr$sampled.values$beta.SNE,
-                 "Status" = "PESMar")
-
-
-
-tbl_12per <- tibble("SIM" = beta.meta_12per$sampled.values$beta.SIM,
-                 "SOR" = beta.meta_12per$sampled.values$beta.SOR,
-                 "SNE" = beta.meta_12per$sampled.values$beta.SNE,
-                 "Status" = "Antigo Perto")
-
-
-
-tbl_12lon <- tibble("SIM" = beta.meta_12lon$sampled.values$beta.SIM,
-                 "SOR" = beta.meta_12lon$sampled.values$beta.SOR,
-                 "SNE" = beta.meta_12lon$sampled.values$beta.SNE,
-                 "Status" = "Antigo Distante")
-
-
-tbl_22per <- tibble("SIM" = beta.meta_22per$sampled.values$beta.SIM,
-                 "SOR" = beta.meta_22per$sampled.values$beta.SOR,
-                 "SNE" = beta.meta_22per$sampled.values$beta.SNE,
-                 "Status" = "Recente Perto")
-
-
-tbl_22lon <- tibble("SIM" = beta.meta_22lon$sampled.values$beta.SIM,
-                 "SOR" = beta.meta_22lon$sampled.values$beta.SOR,
-                 "SNE" = beta.meta_22lon$sampled.values$beta.SNE,
-                 "Status" = "Recente Distante")
-
-
-
-beta_res_all <- bind_rows(tbl_PESMAr, 
-                          tbl_12per, 
-                          tbl_12lon, 
-                          tbl_22per, 
-                          tbl_22lon)
+# all_NMDS_pres_PESMAr <- all_IDs_NMDS_df_presence[all_IDs_NMDS_df$agrupador == "PESMar",] 
+# all_NMDS_pres_12per <- all_IDs_NMDS_df_presence[all_IDs_NMDS_df$agrupador == "Antigo Perto",] 
+# all_NMDS_pres_12lon <- all_IDs_NMDS_df_presence[all_IDs_NMDS_df$agrupador == "Antigo Distante",] 
+# all_NMDS_pres_22per <- all_IDs_NMDS_df_presence[all_IDs_NMDS_df$agrupador == "Recente Perto",] 
+# all_NMDS_pres_22lon <- all_IDs_NMDS_df_presence[all_IDs_NMDS_df$agrupador == "Recente Distante",] 
+# 
+# 
+# 
+# 
+# beta.meta_PESMAr <- beta.sample(all_NMDS_pres_PESMAr, index.family="sor",sites=10,samples=100)
+# beta.meta_12per <- beta.sample(all_NMDS_pres_12per, index.family="sor",sites=10,samples=100)
+# beta.meta_12lon <- beta.sample(all_NMDS_pres_12lon, index.family="sor",sites=10,samples=100)
+# beta.meta_22per <- beta.sample(all_NMDS_pres_22per, index.family="sor",sites=10,samples=100)
+# beta.meta_22lon <- beta.sample(all_NMDS_pres_22lon, index.family="sor",sites=10,samples=100)
+# 
+# 
+# 
+# boxplot((beta.meta_PESMAr$sampled.values$beta.SIM ), 
+#         (beta.meta_12per$sampled.values$beta.SIM), 
+#         (beta.meta_12lon$sampled.values$beta.SIM ), 
+#         (beta.meta_22per$sampled.values$beta.SIM ), 
+#         (beta.meta_22lon$sampled.values$beta.SIM ),
+#         
+#         (beta.meta_PESMAr$sampled.values$beta.SOR ), 
+#         (beta.meta_12per$sampled.values$beta.SOR),
+#         (beta.meta_12lon$sampled.values$beta.SOR ), 
+#         (beta.meta_22per$sampled.values$beta.SOR ), 
+#         (beta.meta_22lon$sampled.values$beta.SOR ),
+#         
+#         (beta.meta_PESMAr$sampled.values$beta.SNE ), 
+#         (beta.meta_12per$sampled.values$beta.SNE), 
+#         (beta.meta_12lon$sampled.values$beta.SNE ), 
+#         (beta.meta_22per$sampled.values$beta.SNE ), 
+#         (beta.meta_22lon$sampled.values$beta.SNE ), 
+#         ylim=c(0,1), names =c("PESMar SIM",
+#                               "Antigo Perto SIM",
+#                               "Antigo Distante SIM",
+#                               "Recente Perto SIM",
+#                               "Recente Distante SIM",
+#                               "PESMar SOR",
+#                               "Antigo Perto SOR",
+#                               "Antigo Distante SOR",
+#                               "Recente Perto SOR",
+#                               "Recente Distante SOR",
+#                               "PESMar SNE",
+#                               "Antigo Perto SNE",
+#                               "Antigo Distante SNE",
+#                               "Recente Perto SNE",
+#                               "Recente Distante SNE"))
+# 
+# 
+# 
+# 
+# 
+# tbl_PESMAr <- tibble("SIM" = beta.meta_PESMAr$sampled.values$beta.SIM,
+#                  "SOR" = beta.meta_PESMAr$sampled.values$beta.SOR,
+#                  "SNE" = beta.meta_PESMAr$sampled.values$beta.SNE,
+#                  "Status" = "PESMar")
+# 
+# 
+# 
+# tbl_12per <- tibble("SIM" = beta.meta_12per$sampled.values$beta.SIM,
+#                  "SOR" = beta.meta_12per$sampled.values$beta.SOR,
+#                  "SNE" = beta.meta_12per$sampled.values$beta.SNE,
+#                  "Status" = "Antigo Perto")
+# 
+# 
+# 
+# tbl_12lon <- tibble("SIM" = beta.meta_12lon$sampled.values$beta.SIM,
+#                  "SOR" = beta.meta_12lon$sampled.values$beta.SOR,
+#                  "SNE" = beta.meta_12lon$sampled.values$beta.SNE,
+#                  "Status" = "Antigo Distante")
+# 
+# 
+# tbl_22per <- tibble("SIM" = beta.meta_22per$sampled.values$beta.SIM,
+#                  "SOR" = beta.meta_22per$sampled.values$beta.SOR,
+#                  "SNE" = beta.meta_22per$sampled.values$beta.SNE,
+#                  "Status" = "Recente Perto")
+# 
+# 
+# tbl_22lon <- tibble("SIM" = beta.meta_22lon$sampled.values$beta.SIM,
+#                  "SOR" = beta.meta_22lon$sampled.values$beta.SOR,
+#                  "SNE" = beta.meta_22lon$sampled.values$beta.SNE,
+#                  "Status" = "Recente Distante")
+# 
+# 
+# 
+# beta_res_all <- bind_rows(tbl_PESMAr, 
+#                           tbl_12per, 
+#                           tbl_12lon, 
+#                           tbl_22per, 
+#                           tbl_22lon)
 
 
 # gráfico ----
@@ -2545,14 +2774,25 @@ beta_res_all <- bind_rows(tbl_PESMAr,
 beta_res_all$Status %>% unique()
 
 beta_box <- beta_res_all %>% 
-  mutate(Status = factor(Status, levels = c("PESMar","Recente","Antigo"))) %>%
+  mutate(Status = factor(Status, levels = c("P1","P2","P3","P4","P5","P6"))) %>%
   # mutate(Status = factor(Status, levels = c("PESMar",
   #                                           "Antigo Perto", 
   #                                           "Antigo Distante", 
   #                                           "Recente Perto", 
   #                                           "Recente Distante"))) %>%
-  pivot_longer(cols = c("SIM","SOR","SNE"),names_to = "index",values_to = "Values") %>% 
-  mutate(index = factor(index, levels = c("SOR","SIM","SNE"))) %>% 
+  pivot_longer(cols = c("SIM","SOR","SNE"),
+               names_to = "index",
+               values_to = "Values") %>% 
+  mutate(index = factor(index, 
+                        levels = c("SOR","SIM","SNE"))) %>% 
+  dplyr::mutate("index" = case_when(index %in% c("SIM") ~ "Turnover\n(Simpson)",
+                          index %in% c("SOR") ~ "Total beta diversity\n(Sorensen)",
+                          index %in% c("SNE") ~ "Nestedness"
+                          )
+                ) %>%
+  dplyr::mutate("index" = factor(index, levels = c("Total beta diversity\n(Sorensen)",
+                                                   "Turnover\n(Simpson)",
+                                                   "Nestedness"))) %>% 
   ggplot(aes(y=Values,
              x=Status))+
   geom_boxplot(aes(fill=Status),
@@ -2564,32 +2804,35 @@ beta_box <- beta_res_all %>%
               width = 0.4,
               size=1) +
  geom_signif(comparisons = list(
-     c("PESMar","Antigo"),
-     c("PESMar","Recente"),
-     c("Antigo","Recente")
-     # ,
-     # c("PESMar","Antigo Perto"),
-     # c("PESMar","Antigo Distante"),
-     # c("PESMar","Recente Perto"),
-     # c("PESMar","Recente Distante")
+     c("P1","P6"),
+     c("P2","P6"),
+     c("P3","P6"),
+     c("P4","P6"),
+     c("P5","P6")
      ),
               map_signif_level=TRUE,
               col="#bfbfbf",
-              y_position = c(0.3,0.4,0.5,0.6,0.7),
+              y_position = c(0.53,0.57,0.61,0.65,0.69
+                             ),
               # test = "wilcox.test",
               ) +
-  theme_bw() +
+  theme_bw(base_size = 14) +
   scale_colour_manual(values = cores,
                       breaks = names(cores)) +
   scale_fill_manual(values = cores,
                     breaks = names(cores)) +
-  facet_grid(cols = vars(index),
-             scales="free",
-             space = "free")+
+  # facet_grid(cols = vars(index),
+  #            scales="free",
+  #            space = "free")+
+  facet_wrap(facets = vars(index),
+             # scales="free_y"
+             ) +
   # labs(title = paste0(estado," - ",EnvMat)) +
-  ylab(label = "Beta diversidade taxonômica par a par") +
-  xlab(label = "Status de conservação") +
-  theme(axis.text.x = element_text(size=12,angle = 45, hjust = 1))
+  ylab(label = "Pairwise Taxonomic Beta diversidade") +
+  xlab(label = "Sample site") +
+  theme(axis.text.x = element_text(size=16,angle = 0, hjust = 0.5),
+        axis.title = element_text(size = 20),
+        strip.text = element_text(size = 18))
   
 
 
@@ -2599,13 +2842,15 @@ beta_box
 
 
 ggsave(file = paste0(figs_path,"/",
-                     "3grupos-",
-                     "beta_part_box-ID80-",prjct_rad,"-",Sys.Date(),".pdf",collapse = ""),
-     plot = beta_box,
-     device = "pdf",
-     width = 30,units = "cm",
-     height = 20,
-     dpi = 300)
+                     prjct_rad,"-",
+                     "6grupos-",
+                     "beta_part_box-",prjct_rad,"-",Sys.Date(),".pdf",collapse = ""),
+       plot = beta_box,
+       device = "pdf",
+       width = 30,
+       height = 20,
+       units = "cm",
+       dpi = 300)
 
 
 # diagrama de venn ----
@@ -2869,8 +3114,10 @@ div_est_phylo <-  estimate_richness(FINAL_PS,
 
  div_est_phylo_plot <- div_est_phylo %>% 
    filter(Indice %in% c(
-     "Observed", "Chao1", "Obs./Chao1",
-                        "Shannon", "Simpson")) %>% 
+     "Observed", 
+     # "Chao1", "Obs./Chao1",
+                        # "Shannon",
+     "Simpson")) %>% 
    ggplot(aes(y=Values,
               # x=interaction(Status,Estado,sep = "-"),
               x=agrupador ,
@@ -2881,26 +3128,22 @@ div_est_phylo <-  estimate_richness(FINAL_PS,
                 alpha = 0.5,
                 linewidth = 0.05) +
    geom_jitter(aes(col = agrupador),
-              alpha = 0.5,
+              alpha = 0.75,
               height = 0,
               width = 0.25)+
-   # geom_signif(comparisons = list(
-     # c("Antigo", "PESMar"),
-     # c("Recente","PESMar"),
-     # c("Antigo", "Recente")
-     #      c("PESMar","Antigo Distante"),
-     #      c("PESMar","Antigo Distante"),
-     #      c("PESMar","Recente Perto"),
-     #      c("PESMar","Recente Distante")
-     # ),              map_signif_level=TRUE,
-     #          col="#111111",
-     #          # y_position = c(20,22,24),
-     #          y_position = c(
-     #            max
-     #          ),
-     #          test = "wilcox.test",
-     #          # map_signif_level = c(F,F,F)
-     #          ) +
+   # geom_signif(
+   #   comparisons = list(
+   #   c("P6", "P1"),
+   #   c("P6", "P2"),
+   #   c("P6", "P3"),
+   #   c("P6", "P4"),
+   #   c("P6", "P5")
+   #   ),
+   #   map_signif_level = F,
+   #   col="#111111",
+   #   y_position = c(32,31,30,29,28),
+   #   test = "wilcox.test",
+     # ) +
    facet_wrap(nrow = 1,
               ~Indice,
               scales = "free")+
@@ -2913,7 +3156,7 @@ div_est_phylo <-  estimate_richness(FINAL_PS,
         axis.title = element_text(size = 14),
         strip.text = element_text(size = 14))+
   # labs(subtitle = "Índices de diversidade estimados a partir das espécies encontradas")+
-  labs(subtitle = "Diversity indexes estimated from species identified at each sampling site")+
+  # labs(subtitle = "Diversity indexes estimated from species identified at each sampling site")+
   xlab(label = "Sampling site") +
   ylab(label = "Value") + 
    guides(shape="none")
@@ -2930,14 +3173,285 @@ div_est_phylo <-  estimate_richness(FINAL_PS,
                       prjct_rad,"-",Sys.Date(),".pdf",collapse = ""),
      plot = div_est_phylo_plot,
      device = "pdf",
-     width = 36,units = "cm",
-     height = 22,
+     width = 16,units = "cm",
+     height = 16,
      dpi = 300)
  
  
  
- 
 
+ # extraindo tabela por ponto amostral par ao manuscrito
+div_est_phylo %>% 
+  group_by(`Sample name`,agrupador,Indice) %>%
+  # group_by(agrupador,Indice) %>% 
+  mutate("Média" = mean(Values),
+         "SD" = sd(Values)) %>% 
+  arrange(Indice,`Sample name`) %>% 
+  select(-c("Sample name","Values")) %>% 
+  unique() %>% 
+  View()
+ 
+ 
+ 
+ # comparando os pontos com wilco singed rank ----
+data <- div_est_phylo %>% 
+  dplyr::filter(Indice %in% c("Observed")) %>%
+  # dplyr::filter(Indice %in% c("Simpson")) %>% 
+  # dplyr::filter(Indice %in% c("Shannon")) %>% 
+  dplyr::mutate("area" = case_when(agrupador %in% c("P6") ~ "Downstream dam",
+                            TRUE ~ "Upstream dam")) %>% 
+  # dplyr::group_by(area,Indice) %>%
+  # group_by(agrupador,Indice) %>% 
+  # dplyr::summarise("Média" = mean(Values)) %>% 
+  dplyr::select(-c("Indice")) 
+  # dplyr::ungroup()
+  
+  # group_by(agrupador) %>%
+  # summarise(p_value = wilcox.test(.$Values, Values, exact = FALSE)$p.value)
+  # pivote
+ 
+ 
+ pairwise.wilcox.test(x = data$Values,g = data$area, p.adjust.method ="none", exact = F,paired = F)
+ 
+ 
+ #anosim ----
+ # https://jkzorz.github.io/2019/06/11/ANOSIM-test.html
+ 
+ 
+ 
+ ano = anosim(x = all_IDs_NMDS_df[,-c(1:4)], grouping = all_IDs_NMDS_df$area, distance = "jaccard", permutations = 9999)
+ 
+ ano
+#gr´afico de diversidade por altimetria ----
+ 
+ 
+ library("ggpubr")
+ 
+ # extraindo tabela por ponto amostral par ao manuscrito
+elevation_plot <- div_est_phylo %>% 
+  filter(Indice %in% c("Observed")) %>% 
+  group_by(`Sample name`,agrupador,Indice, Values) %>%
+  # group_by(agrupador,Indice) %>% 
+  # mutate("Média" = mean(Values),
+  #        "SD" = sd(Values)) %>% 
+  arrange(Indice,`Sample name`) %>% 
+  mutate("Elevation" = case_when(agrupador %in% c("P1") ~ 783,
+                                 agrupador %in% c("P2") ~ 755,
+                                 agrupador %in% c("P3") ~ 738,
+                                 agrupador %in% c("P4") ~ 666,
+                                 agrupador %in% c("P5") ~ 652,
+                                 agrupador %in% c("P6") ~ 515
+                                 )
+         ) %>% 
+  ggplot(aes(x = Elevation,
+             y = Values
+             )) +
+ 
+  geom_smooth(method = "lm",
+              se = T) +
+  stat_cor(method="pearson",
+           size = 7,
+           # label.x = 600, 
+           label.y = 30
+           ) +
+  geom_point(aes(
+             group = agrupador,
+             col = agrupador),
+             size = 4) +
+  geom_text(aes(label = ,
+             label = agrupador),
+            size = 3,
+            nudge_x = -4,
+            nudge_y = 0.75) +
+  scale_colour_manual(values = cores, breaks = names(cores), name = "Sampling site") +
+  # scale_x_reverse(breaks = c(500,600,700,800),
+  scale_x_continuous(breaks = c(500,600,700,800),
+                  limits = c(500,800),
+                  label = scales::label_number(suffix = "m")) +
+  # scale_y_continuous(breaks = c(seq(0,35,5)),name = paste0(expression("alpha")," Diversity (Num. species)")) +
+  scale_y_continuous(breaks = c(seq(0,35,5)),name = "Richness") +
+  # scale_y_continuous(breaks = c(seq(0,35,5)),name = "\u03b1 Diversity (Num. species)") +
+  theme_bw(base_size = 12) +
+  xlab(label = "Elevation") +
+  guides(col="none", fill = "none") +
+  theme(axis.text = element_text(size = 12),
+        axis.title = element_text(size = 20))
+
+
+elevation_plot
+
+
+# pdf.options(encoding='ISOLatin2.enc')
+
+  ggsave(file = paste0(figs_path,"/",
+                       project_name,"-","corr_elevation_div-reverse.pdf"),
+         plot = elevation_plot,
+         device = "pdf",
+         width = 16,
+         height = 10,
+         units = "cm",
+         limitsize = FALSE,
+         dpi = 300)
+ 
+ 
+ 
+ 
+ 
+ 
+  
+  
+#código do Igor
+  ## tbl altimetria ----
+tbl_alt <- read.csv("/home/igorhan/projetos/Paranaiba/tbl_alt_raw.txt",
+                     header = TRUE,
+                     sep = ",") %>% 
+  tibble()
+
+tbl_alt <- tbl_alt %>% 
+  mutate("dist" = round(dist, digits = 1)) %>%
+  BiocGenerics::unique()
+
+
+## tbl pontos ----
+
+pontos <- c("P1" = 543396.2,
+            "P2" = 411780.9,
+            "P3" = 341227.7,
+            "P4" = 230025.1,
+            "P5" = 208226.2,
+            "P6" = 111611.8)
+
+# juntar tbl pnts com alt
+
+tbl_pnts <- tibble("pnts" = names(pontos),
+                   "dist" = pontos) %>% 
+  left_join(tbl_alt,by = "dist") %>% 
+  mutate("dist" = dist/1000)
+
+# deu na em alguns valores, add manualmente...
+
+tbl_pnts <-
+  tbl_pnts %>% 
+  mutate("alt" = case_when(`pnts` %in% c("P2") ~ 755,
+                           `pnts` %in% c("P6") ~ 515,
+                           TRUE ~ `alt`)) %>% 
+  mutate("dist_nasc" = (max(dist)-dist*(-1)))
+
+# plot ----
+
+tbl_plot <- tbl_alt
+
+mean(c(124.710,213.0568))
+
+tbl_plot[seq(1,20000,10),]
+
+
+
+addtext <- function(x, ...) #<== function will add " %" to any number, and allows for any additional formatting through "format".
+    format(paste0(x, " km"), ...)
+
+scales::unit_format(suffix = " km")
+
+plot_elev <-
+tbl_plot %>%
+  filter(row_number(.) %in% c(seq(1,20000,100))) %>% 
+  
+  # tbl_plot[seq(1,20000,100),] %>% 
+  mutate("dist" = dist/1000) %>% 
+  ggplot(aes(x = dist,
+             y = alt)) +
+  annotate(geom = "rect",
+           xmin = 124.710,
+           xmax = 200,
+           # xmax = 213.0568,
+           ymin = -Inf,
+           ymax =   800,
+           alpha = 0.3,
+  ) +
+  annotate(geom = "text",
+           label = paste0("Reservoir"),lineheight = 0.8,
+           x = 163,
+           y = 870,
+           col = "black",
+           size = 5
+  ) +
+  geom_line(linewidth = 4,
+            col = "#030854") +
+  #3bb3eb
+  #64bee8
+  geom_point(data = tbl_pnts,
+             mapping = aes(x = dist,
+                           y = alt+25,
+             fill = pnts),
+             size = 5,
+             shape = 25)+
+  geom_text(data = tbl_pnts,
+                   aes(label = pnts),
+                   size =  5,
+                   nudge_y = 75,
+            nudge_x = c(0,0,0,0,0,5)) +
+  theme_minimal() +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text = element_text(size = 12),
+        axis.title = element_text(size = 20)) +
+  xlab("Distance") +
+  ylab("Elevation") + 
+  scale_fill_manual(name = "Sample sites",values = cores) +
+  guides(col="none", fill = "none") +
+  # scale_x_reverse(breaks = c(0,350,700),
+  scale_x_continuous(breaks = c(700,350,0),
+                  label = scales::label_number(suffix = "km")) +
+  scale_y_continuous(breaks = c(500,700,900),
+                     label = scales::label_number(suffix = "m"))
+
+
+plot_elev
+
+
+ggsave(plot = plot_elev,
+       filename = paste0(figs_path,"/", "altimetria_paranaiba-", Sys.Date(), ".pdf"),
+       device = "pdf",
+       units = "cm",
+       height = 8,
+       width = 16,
+       dpi = 300)
+  
+  
+  
+  
+
+library(patchwork)
+  
+
+
+
+
+plots <- plot_elev +
+  elevation_plot +
+  plot_layout(ncol = 1) + 
+  plot_layout(widths = c(1,1),heights = c(1,3)) 
+  
+ggsave(plot = plots,
+       filename = paste0(figs_path,"/", prjct_rad,"--richness_vs_elevation-", Sys.Date(), ".pdf"),
+       device = "pdf",
+       units = "cm",
+       height = 20,
+       width = 24,
+       dpi = 300)
+  
+  
+  
+  
+  
+  
+  
+ 
+ 
+ 
+ 
+ 
 dim(FINAL_ID_table)
 
 
