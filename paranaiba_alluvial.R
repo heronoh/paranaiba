@@ -7,18 +7,19 @@
   library("ggrepel")
 }
 
+#
+# #colorir pontos ----
+# cores <- c( "P1" = "#3900A4FF",
+#             "P2" = "#0100BFFF",
+#             "P3" = "#008AEFFF",
+#             "P4" = "#01C43BFF",
+#             "P5" = "#316C00FF",
+#             "P6" = "#A4A200FF")
+#
 
-#colorir pontos ----
-cores <- c( "P1" = "#3900A4FF",
-            "P2" = "#0100BFFF",
-            "P3" = "#008AEFFF",
-            "P4" = "#01C43BFF",
-            "P5" = "#316C00FF",
-            "P6" = "#A4A200FF")
-
-
-
-
+# cores <- viridis::turbo(n = 8)[2:6]
+cores <- viridis::viridis(n = 7)[2:6]
+# cores <- viridis::viridis(n = 5)
 #read table ---
 
 # entre no google sheets, na planilha https://docs.google.com/spreadsheets/d/152W3J1of0GEKej2yLQ4qAhcfAHG7zR1wQPgHWUmD50E/edit?usp=sharing
@@ -91,7 +92,7 @@ allu_plot <-
                                         fill = (`Curated ID`)),
                    col = "#000000",
                    alpha = 0.75,
-                   label.size = 0.25,label.padding = 0.1,
+                   label.size = 0.1,label.padding = 0.1,
                    size = 2) +
   scale_fill_manual(values = cores) +
   scale_colour_manual(values = cores) +
@@ -105,10 +106,11 @@ allu_plot <-
 allu_plot
 
 ggsave(plot = allu_plot,
-       file = "/home/danielc/projetos/paranaiba/paranaíba--top5_sps--alluvial.pdf",
-       # file = "/home/heron/prjcts/paranaiba/results/figs/paranaíba--top5_sps--alluvial.pdf",
+       # file = "/home/danielc/projetos/paranaiba/paranaíba--top5_sps--alluvial.pdf",
+       file = "/home/heron/prjcts/paranaiba/results/figs/paranaíba--top5_sps--alluvial.pdf",
        device = "pdf",
        units = "cm",
-       width = 26,
-       height = 14,
-       dpi = 300, limitsize = FALSE)
+       width = 20,
+       height = 12,
+       dpi = 300,
+       limitsize = FALSE)
