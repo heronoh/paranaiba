@@ -315,6 +315,10 @@ cur_Daniel <- readxl::read_xlsx(path = "~/prjcts/paranaiba/data/Paranaiba-Comple
  cur_Daniel$`ASV header` %>% duplicated()
 
 
+
+# FINAL_TBL_prnb_cur_clean$`Family (BLASTn)`[FINAL_TBL_prnb_cur_clean$`Curated ID` %in% c("Apareiodon sp.1")] <- "Parodontidae" 
+ 
+ 
 ```
 
 
@@ -341,6 +345,11 @@ FINAL_TBL_prnb_cur_clean$`Curated ID` %>% unique() %>% sort()
 FINAL_TBL_prnb_cur_clean %>% colnames()
 
 
+FINAL_TBL_prnb_cur_clean$`Curated ID`[FINAL_TBL_prnb_cur_clean$`Curated ID` %in% c("Apareiodon sp1")] <- "Apareiodon sp.1"
+FINAL_TBL_prnb_cur_clean$Identification[FINAL_TBL_prnb_cur_clean$`Curated ID` %in% c("Apareiodon sp1")] <- "Apareiodon sp.1"
+FINAL_TBL_prnb_cur_clean$`Family (BLASTn)`[FINAL_TBL_prnb_cur_clean$`Curated ID` %in% c("Apareiodon sp.1","Apareiodon sp1")] <- "Parodontidae"
+FINAL_TBL_prnb_cur_clean$`Subfamily (BLASTn)`[FINAL_TBL_prnb_cur_clean$`Curated ID` %in% c("Apareiodon sp.1","Apareiodon sp1")] <- "subfamily of Parodontidae"
+FINAL_TBL_prnb_cur_clean$`Genus (BLASTn)`[FINAL_TBL_prnb_cur_clean$`Curated ID` %in% c("Apareiodon sp.1","Apareiodon sp1")] <- "Apareiodon"
 # FINAL_TBL_prnb_cur_clean$`Family (BLASTn)`[FINAL_TBL_prnb_cur_clean$`Curated ID` %in% c("Apareiodon sp.1")] <- "Parodontidae" 
 
 
@@ -720,6 +729,387 @@ writexl::write_xlsx(
 
 
 
+## Tabelas suplementares do artigo
+
+```{r, eval=FALSE,echo=TRUE}
+
+#calculando por réplica ----
+SpsAbd_x_Replicate <-
+  FINAL_TBL_prnb_cur_clean %>%
+  # filter(`Read origin` %in% c("R1","R2")) %>%
+  filter(`1_indentity` >= 80) %>%
+  # filter(Type %in% c("Sample")) %>%
+  filter(`Primer expected length` %in% c("in range")) %>%
+  filter(`Kingdom (BLASTn)` %in% c("Metazoa")) %>%
+  filter(`Class (BLASTn)` %in% c("Actinopteri")) %>%
+  # filter((`Possible contamination` %in% c("True detection") & Type %in% c("Sample") ) |Type %in% c("PCR control") ) %>%
+  mutate("Superkingdom (BLASTn)" = "Eukaryota") %>% 
+  #recalculate relative abundances
+   group_by(
+      Sample,
+      # `Sample name`,
+             `Primer expected length`,`ID status`, `Possible Metazoa`,`Read origin`
+             # ,`Possible contamination`
+             ) %>%
+    # group_by(Sample,`Expected length`,`ID status`, `Possible Metazoa`,`Read origin`,`Possible contamination`) %>%  #WWF
+    mutate("Total clean sample abd."  = 0,
+           "Total clean sample abd." = case_when((`ID status` %in% c("IDed") & 
+                                                        `Primer expected length` %in% c("in range") & 
+                                                        `Possible contamination` %in% c("True detection") &
+                                                        `Possible Metazoa` == TRUE) ~ sum(`ASV absolute abundance`)
+                                                      # (`ID status` %in% "not IDed") ~ 0,
+                                                      # (`Expected length` %in% "out of range") ~ 0,
+                                                      # (`Possible contamination` %in% "Possible contamination") ~ 0,
+                                                      # (`Possible Metazoa` %in% FALSE) ~ 0
+                                                      # TRUE ~ 0
+                                                      )) %>% 
+    ungroup() %>% 
+  group_by(
+    Sample,`Curated ID`) %>% 
+  mutate("ASV % abundance on sample" = sum(`ASV absolute abundance`)/mean(`Total clean sample abd.`)) %>% 
+    ungroup() %>% 
+  #percentualize abds
+  mutate("ASV % abundance on sample" = `Clean relative abd. on sample`*100) %>% 
+  
+  group_by(`Curated ID`) %>% 
+  mutate("Min. BLASTn pseudo-score" = min(`BLASTn pseudo-score`),
+         "Max. BLASTn pseudo-score" = max(`BLASTn pseudo-score`),
+         "Num. ASVs in this ID" = length(unique(`ASV (Sequence)`)),
+         "ID total abd. on all samples" = sum(`ASV absolute abundance`),
+         "ASVs in this ID" = paste0(unique(`ASV header`),collapse = ", "),
+         "Num. OTUs in this ID" = length(unique(`OTU`)),
+         "OTUs in this ID" = paste0(unique(`OTU`),collapse = ", ")) %>% 
+  relocate("Min. BLASTn pseudo-score", "Max. BLASTn pseudo-score","OTU") %>% 
+  ungroup() %>%
+  # filter(Client %in% c("ICMBio")) %>% 
+  # filter(`Read origin` %in% c("merged")) %>% 
+  # 
+   mutate(Identification = if_else(Identification %in% c(NA,"NA"),"NA",Identification)) %>% 
+  dplyr::select(-c("Relative abundance to all samples", 
+            "Sample total abundance",
+            "ASV absolute abundance",
+            # "Metadata 1","Metadata 2","Metadata 3","Metadata 4","Metadata 5","obs",
+            # "Curated ID",
+            "Identification",
+            "Final ID (DADA2)",
+            "Final ID (BLASTn)",
+            # "Extraction.control",
+            "PCR control",
+            "Prop. to PCR control",
+            "Prop. to Ext control",
+            "Prop. to Filt control",
+            "Possible contamination",
+            "Primer expected length",
+            "Type",
+            "blast ID Origin",
+            # "Read origin",
+                       # "BLASTn pseudo-score","Order (BLASTn)","BLAST_subclass","Class (BLASTn)","Phylum (BLASTn)","BLAST_subphylum",
+                       # "Kingdom (BLASTn)",
+            "1_subject header","1_subject","1_indentity","1_qcovhsp",
+                       "1_length","1_mismatches","1_gaps","1_query start","1_query end",
+                       "1_subject start","1_subject end","1_e-value","1_bitscore","2_subject header",
+                       "2_subject","2_indentity","2_qcovhsp","2_length","2_mismatches",
+                       "2_gaps","2_query start","2_query end","2_subject start","2_subject end",
+                       "2_e-value","2_bitscore","3_subject header","3_subject","3_indentity",
+                       "3_qcovhsp","3_length","3_mismatches","3_gaps","3_query start",
+                       "3_query end","3_subject start","3_subject end","3_e-value","3_bitscore",
+                       # "Contamination control",
+            "ASV Size (pb)","ASV header","ASV (Sequence)","OTU"
+            )) %>% 
+  pivot_wider(
+    id_cols = c("Primer",
+                "Read origin",
+                # "Identification",
+                # 
+      "Curated ID",
+      # "Final ID (DADA2)",
+                
+                
+                        # "Kingdom (DADA2)",
+                        # "Phylum (DADA2)",
+                        # "Class (DADA2)",
+                        # "Order (DADA2)",
+                        # "Family (DADA2)",
+                        # "Genus (DADA2)",
+                        # "Specimen (DADA2)",
+                        # "Species (DADA2)",
+                        # "Basin (DADA2)",
+                        # "Exact Genus/Species (DADA2)",
+                        # 
+                        "Min. BLASTn pseudo-score",
+      "Max. BLASTn pseudo-score",
+                
+                "Possible Metazoa",
+             "Superkingdom (BLASTn)",
+             "Kingdom (BLASTn)",
+             "Phylum (BLASTn)",
+             "Subphylum (BLASTn)",
+             "Class (BLASTn)",
+             "Subclass (BLASTn)",
+             "Order (BLASTn)",
+             "Suborder (BLASTn)",
+             "Family (BLASTn)",
+             "Subfamily (BLASTn)",
+             "Genus (BLASTn)",
+                # "BLAST ID","max_tax"
+      "ID total abd. on all samples",
+      "Num. ASVs in this ID",
+      "ASVs in this ID",
+      "Num. OTUs in this ID",
+      "OTUs in this ID" 
+      ),
+    # values_from = c("Relative abundance on sample"),
+    # values_from = c("ASV % abundance on sample"),
+    values_from = c("Clean relative abd. on sample"),
+    values_fn = sum_uniq,
+    names_from = "Unique_File_name",
+    names_prefix = "SAMPLE ",
+    names_sort = TRUE) %>% 
+  relocate(c("Primer","Primer",
+             "Read origin",
+             
+             
+                        # "Kingdom (DADA2)",
+                        # "Phylum (DADA2)",
+                        # "Class (DADA2)",
+                        # "Order (DADA2)",
+                        # "Family (DADA2)",
+                        # "Genus (DADA2)",
+                        # "Specimen (DADA2)",
+                        # "Species (DADA2)",
+                        # "Basin (DADA2)",
+                        # "Exact Genus/Species (DADA2)",
+             
+             "Superkingdom (BLASTn)",
+              "Kingdom (BLASTn)",
+             "Phylum (BLASTn)",
+             "Subphylum (BLASTn)",
+             "Class (BLASTn)",
+             "Subclass (BLASTn)",
+             "Order (BLASTn)",
+             "Suborder (BLASTn)",
+             "Family (BLASTn)",
+             "Subfamily (BLASTn)",
+             "Genus (BLASTn)",
+             # "max_tax","BLAST ID",
+             "Min. BLASTn pseudo-score",
+             "Max. BLASTn pseudo-score",
+             "Possible Metazoa", 
+             # "Identification",
+             # 
+      "Curated ID",
+      # "Final ID (DADA2)",
+      "Num. ASVs in this ID",
+      "ASVs in this ID",
+      "Num. OTUs in this ID",
+      "OTUs in this ID",
+             starts_with("SAMPLE "),
+      "ID total abd. on all samples",
+             )) %>%  
+  mutate_if(is.numeric , replace_na, replace = 0) %>% 
+  mutate("Total abd. of all IDs" =  sum(`ID total abd. on all samples`),
+         "Cur. ID % abd. on all samples" = round(`ID total abd. on all samples`/`Total abd. of all IDs`*100,
+                                                    digits = 3))
+
+
+SpsAbd_x_Replicate %>% 
+writexl::write_xlsx(
+                    path = paste0(results_path,"/",prjct_rad,"-SpsAbd_x_replicate-",Sys.Date(),".xlsx"),
+                    col_names = TRUE,format_headers = TRUE)
+
+
+#calculando por amostra ----
+SpsAbd_x_amostra <-
+  FINAL_TBL_prnb_cur_clean %>%
+  # filter(`Read origin` %in% c("R1","R2")) %>%
+  filter(`1_indentity` >= 80) %>%
+  # filter(Type %in% c("Sample")) %>%
+  filter(`Primer expected length` %in% c("in range")) %>%
+  filter(`Kingdom (BLASTn)` %in% c("Metazoa")) %>%
+  filter(`Class (BLASTn)` %in% c("Actinopteri")) %>%
+  # filter((`Possible contamination` %in% c("True detection") & Type %in% c("Sample") ) |Type %in% c("PCR control") ) %>%
+  mutate("Superkingdom (BLASTn)" = "Eukaryota") %>% 
+  #recalculate relative abundances
+   group_by(
+      # Sample,
+     `Metadata 1`,
+      # `Sample name`,
+             `Primer expected length`,`ID status`, `Possible Metazoa`,`Read origin`
+             # ,`Possible contamination`
+             ) %>%
+    # group_by(Sample,`Expected length`,`ID status`, `Possible Metazoa`,`Read origin`,`Possible contamination`) %>%  #WWF
+    mutate("Total clean sample abd."  = 0,
+           "Total clean sample abd." = case_when((`ID status` %in% c("IDed") & 
+                                                        `Primer expected length` %in% c("in range") & 
+                                                        `Possible contamination` %in% c("True detection") &
+                                                        `Possible Metazoa` == TRUE) ~ sum(`ASV absolute abundance`)
+                                                      # (`ID status` %in% "not IDed") ~ 0,
+                                                      # (`Expected length` %in% "out of range") ~ 0,
+                                                      # (`Possible contamination` %in% "Possible contamination") ~ 0,
+                                                      # (`Possible Metazoa` %in% FALSE) ~ 0
+                                                      # TRUE ~ 0
+                                                      )) %>% 
+    ungroup() %>% 
+  group_by(
+    `Metadata 1`,`Curated ID`) %>% 
+  mutate("ASV % abundance on sample" = sum(`ASV absolute abundance`)/mean(`Total clean sample abd.`)) %>% 
+    ungroup() %>% 
+  #percentualize abds
+  mutate("ASV % abundance on sample" = `Clean relative abd. on sample`*100) %>% 
+  
+  group_by(`Curated ID`) %>% 
+  mutate("Min. BLASTn pseudo-score" = min(`BLASTn pseudo-score`),
+         "Max. BLASTn pseudo-score" = max(`BLASTn pseudo-score`),
+         "Num. ASVs in this ID" = length(unique(`ASV (Sequence)`)),
+         "ID total abd. on all samples" = sum(`ASV absolute abundance`),
+         "ASVs in this ID" = paste0(unique(`ASV header`),collapse = ", "),
+         "Num. OTUs in this ID" = length(unique(`OTU`)),
+         "OTUs in this ID" = paste0(unique(`OTU`),collapse = ", ")) %>% 
+  relocate("Min. BLASTn pseudo-score", "Max. BLASTn pseudo-score","OTU") %>% 
+  ungroup() %>%
+  # filter(Client %in% c("ICMBio")) %>% 
+  # filter(`Read origin` %in% c("merged")) %>% 
+  # 
+   mutate(Identification = if_else(Identification %in% c(NA,"NA"),"NA",Identification)) %>% 
+  dplyr::select(-c("Relative abundance to all samples", 
+            "Sample total abundance",
+            "ASV absolute abundance",
+            # "Metadata 1","Metadata 2","Metadata 3","Metadata 4","Metadata 5","obs",
+            # "Curated ID",
+            "Identification",
+            "Final ID (DADA2)",
+            "Final ID (BLASTn)",
+            # "Extraction.control",
+            "PCR control",
+            "Prop. to PCR control",
+            "Prop. to Ext control",
+            "Prop. to Filt control",
+            "Possible contamination",
+            "Primer expected length",
+            "Type",
+            "blast ID Origin",
+            # "Read origin",
+                       # "BLASTn pseudo-score","Order (BLASTn)","BLAST_subclass","Class (BLASTn)","Phylum (BLASTn)","BLAST_subphylum",
+                       # "Kingdom (BLASTn)",
+            "1_subject header","1_subject","1_indentity","1_qcovhsp",
+                       "1_length","1_mismatches","1_gaps","1_query start","1_query end",
+                       "1_subject start","1_subject end","1_e-value","1_bitscore","2_subject header",
+                       "2_subject","2_indentity","2_qcovhsp","2_length","2_mismatches",
+                       "2_gaps","2_query start","2_query end","2_subject start","2_subject end",
+                       "2_e-value","2_bitscore","3_subject header","3_subject","3_indentity",
+                       "3_qcovhsp","3_length","3_mismatches","3_gaps","3_query start",
+                       "3_query end","3_subject start","3_subject end","3_e-value","3_bitscore",
+                       # "Contamination control",
+            "ASV Size (pb)","ASV header","ASV (Sequence)","OTU"
+            )) %>% 
+  pivot_wider(
+    id_cols = c("Primer",
+                "Read origin",
+                # "Identification",
+                # 
+      "Curated ID",
+      # "Final ID (DADA2)",
+                
+                
+                        # "Kingdom (DADA2)",
+                        # "Phylum (DADA2)",
+                        # "Class (DADA2)",
+                        # "Order (DADA2)",
+                        # "Family (DADA2)",
+                        # "Genus (DADA2)",
+                        # "Specimen (DADA2)",
+                        # "Species (DADA2)",
+                        # "Basin (DADA2)",
+                        # "Exact Genus/Species (DADA2)",
+                        # 
+                        "Min. BLASTn pseudo-score",
+      "Max. BLASTn pseudo-score",
+                
+                "Possible Metazoa",
+             "Superkingdom (BLASTn)",
+             "Kingdom (BLASTn)",
+             "Phylum (BLASTn)",
+             "Subphylum (BLASTn)",
+             "Class (BLASTn)",
+             "Subclass (BLASTn)",
+             "Order (BLASTn)",
+             "Suborder (BLASTn)",
+             "Family (BLASTn)",
+             "Subfamily (BLASTn)",
+             "Genus (BLASTn)",
+                # "BLAST ID","max_tax"
+      "ID total abd. on all samples",
+      "Num. ASVs in this ID",
+      "ASVs in this ID",
+      "Num. OTUs in this ID",
+      "OTUs in this ID" 
+      ),
+    # values_from = c("Relative abundance on sample"),
+    # values_from = c("ASV % abundance on sample"),
+    values_from = c("Clean relative abd. on sample"),
+    values_fn = sum_uniq,
+    names_from = "Metadata 1",
+    names_prefix = "SAMPLE ",
+    names_sort = TRUE) %>% 
+  relocate(c("Primer","Primer",
+             "Read origin",
+             
+             
+                        # "Kingdom (DADA2)",
+                        # "Phylum (DADA2)",
+                        # "Class (DADA2)",
+                        # "Order (DADA2)",
+                        # "Family (DADA2)",
+                        # "Genus (DADA2)",
+                        # "Specimen (DADA2)",
+                        # "Species (DADA2)",
+                        # "Basin (DADA2)",
+                        # "Exact Genus/Species (DADA2)",
+             
+             "Superkingdom (BLASTn)",
+              "Kingdom (BLASTn)",
+             "Phylum (BLASTn)",
+             "Subphylum (BLASTn)",
+             "Class (BLASTn)",
+             "Subclass (BLASTn)",
+             "Order (BLASTn)",
+             "Suborder (BLASTn)",
+             "Family (BLASTn)",
+             "Subfamily (BLASTn)",
+             "Genus (BLASTn)",
+             # "max_tax","BLAST ID",
+             "Min. BLASTn pseudo-score",
+             "Max. BLASTn pseudo-score",
+             "Possible Metazoa", 
+             # "Identification",
+             # 
+      "Curated ID",
+      # "Final ID (DADA2)",
+      "Num. ASVs in this ID",
+      "ASVs in this ID",
+      "Num. OTUs in this ID",
+      "OTUs in this ID",
+             starts_with("SAMPLE "),
+      "ID total abd. on all samples",
+             )) %>%  
+  mutate_if(is.numeric , replace_na, replace = 0) %>% 
+  mutate("Total abd. of all IDs" =  sum(`ID total abd. on all samples`),
+         "Cur. ID % abd. on all samples" = round(`ID total abd. on all samples`/`Total abd. of all IDs`*100,
+                                                    digits = 3))
+
+
+SpsAbd_x_amostra %>% 
+writexl::write_xlsx(
+                    path = paste0(results_path,"/",prjct_rad,"-SpsAbd_x_amostra-",Sys.Date(),".xlsx"),
+                    col_names = TRUE,format_headers = TRUE)
+
+
+
+```
+
+
+
+
 ## IDs heatmap
 
 ```{r, eval=FALSE,echo=TRUE}
@@ -992,7 +1382,7 @@ scales::show_col(ggthemes::calc_pal()(12))
 
 
 
-cores <- c( "P1" = "#30123BFF",
+<- <- c( "P1" = "#30123BFF",
             "P2" = "#4688FBFF",
             "P3" = "#1CE6B3FF",
             "P4" = "#A8FB39FF",
