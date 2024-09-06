@@ -16,17 +16,13 @@
 #             "P5" = "#316C00FF",
 #             "P6" = "#A4A200FF")
 #
-
+#colorir espécies (5) ----
 # cores <- viridis::turbo(n = 8)[2:6]
 cores <- viridis::viridis(n = 7)[2:6]
 # cores <- viridis::viridis(n = 5)
+
+
 #read table ---
-
-# entre no google sheets, na planilha https://docs.google.com/spreadsheets/d/152W3J1of0GEKej2yLQ4qAhcfAHG7zR1wQPgHWUmD50E/edit?usp=sharing
-# "Arquivo" -> "Download" -> "Comma separated values (.csv)"
-
-#no Rstudio, vá no canto inferior direito em "Upload"
-# salve este arquivo no seu diretório de trabalho e altere o caminho a seguir até apontar pra ele, usando o tab
 
                                       #AUTO COMPLETE AQUI
 comp_analysis_res_tbl <- readxl::read_xlsx(path = "/home/heron/prjcts/paranaiba/results/Paranaíba-Complete_analysis_results-2024-09-05.xlsx",
@@ -41,11 +37,14 @@ sample_names <- comp_analysis_res_tbl$`Metadata 1` %>% unique()
 
 df_allu <-
   comp_analysis_res_tbl %>%
+  dplyr::filter(`Clean relative abd. on sample` > 0) %>%
+  dplyr::filter(`Total clean sample abd.` > 0) %>%
   dplyr::filter(Type %in% c("Sample")) %>%
   dplyr::mutate("Sample Name" = `Metadata 1`) %>%
   dplyr::mutate("ID clean abd on sample" = 0) %>%
   dplyr::group_by(`Sample Name`,`Curated ID`) %>%
-  dplyr::summarize(`ID clean abd on sample` = sum(`ASV absolute abundance`)/mean(`Total clean sample abd.`)) %>%
+  dplyr::mutate(`ID clean abd on sample` =  mean(`ASV absolute abundance`/`Total clean sample abd.`)/2) %>%
+  dplyr::summarise(`ID clean abd on sample` =  sum(`ID clean abd on sample`)) %>%
   dplyr::ungroup() %>%
   dplyr::filter(`Curated ID` %in% c("Pimelodus maculatus",
                                     "Prochilodus lineatus",
@@ -53,13 +52,14 @@ df_allu <-
                                     "Pimelodella sp.3",
                                     "Astyanax lacustris"
                                     )) %>%
-  tidyr::pivot_wider(id_cols = "Curated ID",
-                     names_from = "Sample Name",
-                     values_from = "ID clean abd on sample",
-                     values_fill = 0) %>%
-  tidyr::pivot_longer(cols = any_of(sample_names),
-                      names_to = "Sample Name",
-                      values_to = "ID clean abd on sample") %>%
+  # tidyr::pivot_wider(id_cols = "Curated ID",
+  #                    names_from = "Sample Name",
+  #                    values_from = "ID clean abd on sample",
+  #                    values_fill = 0) %>%
+  # select(-c("Curated ID")) %>% colSums()
+  # tidyr::pivot_longer(cols = any_of(sample_names),
+  #                     names_to = "Sample Name",
+  #                     values_to = "ID clean abd on sample") %>%
   mutate(`Curated ID` = factor(`Curated ID`,levels = rev(c("Pimelodus maculatus",
                                                        "Prochilodus lineatus",
                                                        "Leporinus octofasciatus",

@@ -764,13 +764,15 @@ SpsAbd_x_Replicate <-
                                                       # TRUE ~ 0
                                                       )) %>% 
     ungroup() %>% 
-  group_by(
-    Sample,`Curated ID`) %>% 
-  mutate("ASV % abundance on sample" = sum(`ASV absolute abundance`)/mean(`Total clean sample abd.`)) %>% 
-    ungroup() %>% 
+  group_by(`Sample`,`Curated ID`) %>% 
+  mutate("ASV % abundance on sample" = (`ASV absolute abundance`/`Total clean sample abd.`)) %>% 
+    # ungroup() %>% 
   #percentualize abds
-  mutate("ASV % abundance on sample" = `Clean relative abd. on sample`*100) %>% 
-  
+  mutate("ASV % abundance on sample" = `ASV % abundance on sample`*100) %>% 
+  # group_by( `Sample`) %>%
+  # summarise("total" = sum(`ASV % abundance on sample`) ) %>% View()
+  # group_by(`Sample`,`Curated ID`) %>% 
+  ungroup() %>% 
   group_by(`Curated ID`) %>% 
   mutate("Min. BLASTn pseudo-score" = min(`BLASTn pseudo-score`),
          "Max. BLASTn pseudo-score" = max(`BLASTn pseudo-score`),
@@ -784,11 +786,10 @@ SpsAbd_x_Replicate <-
   # filter(Client %in% c("ICMBio")) %>% 
   # filter(`Read origin` %in% c("merged")) %>% 
   # 
-   mutate(Identification = if_else(Identification %in% c(NA,"NA"),"NA",Identification)) %>% 
   dplyr::select(-c("Relative abundance to all samples", 
             "Sample total abundance",
             "ASV absolute abundance",
-            # "Metadata 1","Metadata 2","Metadata 3","Metadata 4","Metadata 5","obs",
+            # "Sample","Metadata 2","Metadata 3","Metadata 4","Metadata 5","obs",
             # "Curated ID",
             "Identification",
             "Final ID (DADA2)",
@@ -816,26 +817,12 @@ SpsAbd_x_Replicate <-
                        # "Contamination control",
             "ASV Size (pb)","ASV header","ASV (Sequence)","OTU"
             )) %>% 
-  pivot_wider(
-    id_cols = c("Primer",
-                "Read origin",
-                # "Identification",
+  tidyr::pivot_wider(
+    id_cols = c(
+      "Primer",
+              "Read origin",
                 # 
       "Curated ID",
-      # "Final ID (DADA2)",
-                
-                
-                        # "Kingdom (DADA2)",
-                        # "Phylum (DADA2)",
-                        # "Class (DADA2)",
-                        # "Order (DADA2)",
-                        # "Family (DADA2)",
-                        # "Genus (DADA2)",
-                        # "Specimen (DADA2)",
-                        # "Species (DADA2)",
-                        # "Basin (DADA2)",
-                        # "Exact Genus/Species (DADA2)",
-                        # 
                         "Min. BLASTn pseudo-score",
       "Max. BLASTn pseudo-score",
                 
@@ -859,10 +846,10 @@ SpsAbd_x_Replicate <-
       "OTUs in this ID" 
       ),
     # values_from = c("Relative abundance on sample"),
-    # values_from = c("ASV % abundance on sample"),
-    values_from = c("Clean relative abd. on sample"),
+    values_from = c("ASV % abundance on sample"),
+    # values_from = c("Clean relative abd. on sample"),
     values_fn = sum_uniq,
-    names_from = "Unique_File_name",
+    names_from = "Sample",
     names_prefix = "SAMPLE ",
     names_sort = TRUE) %>% 
   relocate(c("Primer","Primer",
@@ -929,10 +916,10 @@ SpsAbd_x_amostra <-
   filter(`Class (BLASTn)` %in% c("Actinopteri")) %>%
   # filter((`Possible contamination` %in% c("True detection") & Type %in% c("Sample") ) |Type %in% c("PCR control") ) %>%
   mutate("Superkingdom (BLASTn)" = "Eukaryota") %>% 
+  mutate("Sample" = `Metadata 1`) %>% #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   #recalculate relative abundances
    group_by(
-      # Sample,
-     `Metadata 1`,
+      Sample,
       # `Sample name`,
              `Primer expected length`,`ID status`, `Possible Metazoa`,`Read origin`
              # ,`Possible contamination`
@@ -950,13 +937,15 @@ SpsAbd_x_amostra <-
                                                       # TRUE ~ 0
                                                       )) %>% 
     ungroup() %>% 
-  group_by(
-    `Metadata 1`,`Curated ID`) %>% 
-  mutate("ASV % abundance on sample" = sum(`ASV absolute abundance`)/mean(`Total clean sample abd.`)) %>% 
-    ungroup() %>% 
+  group_by(`Sample`,`Curated ID`) %>% 
+  mutate("ASV % abundance on sample" = (`ASV absolute abundance`/`Total clean sample abd.`)) %>% 
+    # ungroup() %>% 
   #percentualize abds
-  mutate("ASV % abundance on sample" = `Clean relative abd. on sample`*100) %>% 
-  
+  mutate("ASV % abundance on sample" = `ASV % abundance on sample`*100) %>% 
+  # group_by( `Sample`) %>%
+  # summarise("total" = sum(`ASV % abundance on sample`) ) %>% View()
+  # group_by(`Sample`,`Curated ID`) %>% 
+  ungroup() %>% 
   group_by(`Curated ID`) %>% 
   mutate("Min. BLASTn pseudo-score" = min(`BLASTn pseudo-score`),
          "Max. BLASTn pseudo-score" = max(`BLASTn pseudo-score`),
@@ -970,11 +959,10 @@ SpsAbd_x_amostra <-
   # filter(Client %in% c("ICMBio")) %>% 
   # filter(`Read origin` %in% c("merged")) %>% 
   # 
-   mutate(Identification = if_else(Identification %in% c(NA,"NA"),"NA",Identification)) %>% 
   dplyr::select(-c("Relative abundance to all samples", 
             "Sample total abundance",
             "ASV absolute abundance",
-            # "Metadata 1","Metadata 2","Metadata 3","Metadata 4","Metadata 5","obs",
+            # "Sample","Metadata 2","Metadata 3","Metadata 4","Metadata 5","obs",
             # "Curated ID",
             "Identification",
             "Final ID (DADA2)",
@@ -1002,26 +990,12 @@ SpsAbd_x_amostra <-
                        # "Contamination control",
             "ASV Size (pb)","ASV header","ASV (Sequence)","OTU"
             )) %>% 
-  pivot_wider(
-    id_cols = c("Primer",
-                "Read origin",
-                # "Identification",
+  tidyr::pivot_wider(
+    id_cols = c(
+      "Primer",
+              "Read origin",
                 # 
       "Curated ID",
-      # "Final ID (DADA2)",
-                
-                
-                        # "Kingdom (DADA2)",
-                        # "Phylum (DADA2)",
-                        # "Class (DADA2)",
-                        # "Order (DADA2)",
-                        # "Family (DADA2)",
-                        # "Genus (DADA2)",
-                        # "Specimen (DADA2)",
-                        # "Species (DADA2)",
-                        # "Basin (DADA2)",
-                        # "Exact Genus/Species (DADA2)",
-                        # 
                         "Min. BLASTn pseudo-score",
       "Max. BLASTn pseudo-score",
                 
@@ -1045,10 +1019,10 @@ SpsAbd_x_amostra <-
       "OTUs in this ID" 
       ),
     # values_from = c("Relative abundance on sample"),
-    # values_from = c("ASV % abundance on sample"),
-    values_from = c("Clean relative abd. on sample"),
+    values_from = c("ASV % abundance on sample"),
+    # values_from = c("Clean relative abd. on sample"),
     values_fn = sum_uniq,
-    names_from = "Metadata 1",
+    names_from = "Sample",
     names_prefix = "SAMPLE ",
     names_sort = TRUE) %>% 
   relocate(c("Primer","Primer",
@@ -1096,6 +1070,10 @@ SpsAbd_x_amostra <-
   mutate("Total abd. of all IDs" =  sum(`ID total abd. on all samples`),
          "Cur. ID % abd. on all samples" = round(`ID total abd. on all samples`/`Total abd. of all IDs`*100,
                                                     digits = 3))
+
+# %>%
+#   select(starts_with("SAMPLE")) %>%
+#   colSums()
 
 
 SpsAbd_x_amostra %>% 
